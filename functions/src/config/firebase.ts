@@ -8,12 +8,7 @@ export const initializeFirebase = (): void => {
 
 export const getFirestore = (): admin.firestore.Firestore => {
   const firestore = admin.firestore();
-  
-  // Firestoreエミュレータの自動検出
-  if (process.env.FIRESTORE_EMULATOR_HOST) {
-    console.log(`🔧 Using Firestore Emulator: ${process.env.FIRESTORE_EMULATOR_HOST}`);
-  }
-  
+
   return firestore;
 };
 

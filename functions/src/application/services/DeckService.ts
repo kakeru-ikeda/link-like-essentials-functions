@@ -1,6 +1,10 @@
-import { Deck, DeckCreateInput, DeckUpdateInput } from '@/domain/entities/Deck';
+import type {
+  Deck,
+  DeckCreateInput,
+  DeckUpdateInput,
+} from '@/domain/entities/Deck';
 import { ForbiddenError, NotFoundError } from '@/domain/errors/AppError';
-import { IDeckRepository } from '@/domain/repositories/IDeckRepository';
+import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 
 export class DeckService {
   constructor(private deckRepository: IDeckRepository) {}

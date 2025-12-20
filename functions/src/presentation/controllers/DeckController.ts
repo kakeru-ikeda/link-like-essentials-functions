@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
-import { DeckService } from '@/application/services/DeckService';
-import { AuthRequest } from '@/presentation/middleware/authMiddleware';
+import type { DeckService } from '@/application/services/DeckService';
+import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   DeckCreateSchema,
   DeckQuerySchema,
