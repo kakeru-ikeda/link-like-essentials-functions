@@ -23,9 +23,9 @@ export class AuthenticationError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(
     message: string = '入力値が不正です',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public details?: any
   ) {
     super(message, 'VALIDATION_ERROR', 400);
