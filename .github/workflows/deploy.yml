@@ -1,0 +1,123 @@
+name: Deploy to Firebase Functions
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Functions
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./functions
+        run: npm ci
+
+      - name: Build
+        working-directory: ./functions
+        run: npm run build
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+      - name: Notify Discord - Success
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "✅ Firebase Functions デプロイ成功",
+                   "color": 3066993,
+                   "fields": [
+                     {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                     {"name": "ブランチ", "value": "'"${GITHUB_REF#refs/heads/}"'", "inline": true},
+                     {"name": "実行者", "value": "'"$GITHUB_ACTOR"'", "inline": true},
+                     {"name": "コミット", "value": "'"$(git log -1 --pretty=%B | head -n 1)"'", "inline": false}
+                   ],
+                   "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                 }]
+               }' \
+               $DISCORD_WEBHOOK
+
+      - name: Notify Discord - Failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "❌ Firebase Functions デプロイ失敗",
+                   "color": 15158332,
+                   "fields": [
+                     {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                     {"name": "ブランチ", "value": "'"${GITHUB_REF#refs/heads/}"'", "inline": true},
+                     {"name": "実行者", "value": "'"$GITHUB_ACTOR"'", "inline": true},
+                     {"name": "ワークフロー", "value": "[実行ログを確認]('"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"')", "inline": false}
+                   ],
+                   "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                 }]
+               }' \
+               $DISCORD_WEBHOOK
+
+      - name: Notify Discord - Success
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "✅ デプロイ成功",
+                   "color": 3066993,
+                   "fields": [
+                     {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                     {"name": "ブランチ", "value": "'"${GITHUB_REF#refs/heads/}"'", "inline": true},
+                     {"name": "実行者", "value": "'"$GITHUB_ACTOR"'", "inline": true},
+                     {"name": "コミット", "value": "'"$(git log -1 --pretty=%B | head -n 1)"'", "inline": false}
+                   ],
+                   "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                 }]
+               }' \
+               $DISCORD_WEBHOOK
+
+      - name: Notify Discord - Failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [{
+                   "title": "❌ デプロイ失敗",
+                   "color": 15158332,
+                   "fields": [
+                     {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                     {"name": "ブランチ", "value": "'"${GITHUB_REF#refs/heads/}"'", "inline": true},
+                     {"name": "実行者", "value": "'"$GITHUB_ACTOR"'", "inline": true},
+                     {"name": "ワークフロー", "value": "[実行ログを確認]('"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"')", "inline": false}
+                   ],
+                   "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                 }]
+               }' \
+               $DISCORD_WEBHOOK
