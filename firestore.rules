@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /decks/{deckId} {
+      // 読み取り: 認証済みユーザーは全デッキ閲覧可能（公開デッキ前提）
+      allow read: if request.auth != null;
+      
+      // 作成: 認証済みユーザー（userIdは自分のUID必須）
+      allow create: if request.auth != null &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // 更新・削除: 自分のデッキのみ
+      allow update, delete: if request.auth != null &&
+        resource.data.userId == request.auth.uid;
+    }
+  }
+}
