@@ -4,6 +4,11 @@ lib/
 *.js.map
 *.d.ts
 
+# Except config files
+!*.config.js
+!.eslintrc.js
+!jest.config.js
+
 # Dependencies
 node_modules/
 

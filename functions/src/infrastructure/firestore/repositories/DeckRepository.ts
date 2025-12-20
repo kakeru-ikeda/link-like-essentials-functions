@@ -1,8 +1,12 @@
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
-import { Deck, DeckCreateInput, DeckUpdateInput } from '@/domain/entities/Deck';
+import type {
+  Deck,
+  DeckCreateInput,
+  DeckUpdateInput,
+} from '@/domain/entities/Deck';
 import { NotFoundError } from '@/domain/errors/AppError';
-import { IDeckRepository } from '@/domain/repositories/IDeckRepository';
+import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import { FirestoreClient } from '@/infrastructure/firestore/FirestoreClient';
 
 export class DeckRepository implements IDeckRepository {

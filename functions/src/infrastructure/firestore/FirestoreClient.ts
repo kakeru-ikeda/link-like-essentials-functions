@@ -1,4 +1,4 @@
-import { Firestore } from 'firebase-admin/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
 
 import { getFirestore } from '@/config/firebase';
 

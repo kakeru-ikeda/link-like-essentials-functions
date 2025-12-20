@@ -1,4 +1,4 @@
-import { Deck, DeckCreateInput, DeckUpdateInput } from '../entities/Deck';
+import type { Deck, DeckCreateInput, DeckUpdateInput } from '../entities/Deck';
 
 export interface IDeckRepository {
   /**

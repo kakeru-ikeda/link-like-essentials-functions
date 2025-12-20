@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 import { AuthenticationError } from '@/domain/errors/AppError';
 import { FirebaseAuth } from '@/infrastructure/auth/FirebaseAuth';
