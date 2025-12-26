@@ -29,7 +29,11 @@ export class UserService {
   /**
    * プロフィールを作成
    */
-  async createProfile(uid: string, username: string): Promise<User> {
+  async createProfile(
+    uid: string,
+    displayName: string,
+    bio?: string
+  ): Promise<User> {
     // 既存ユーザーチェック
     const existingUser = await this.userRepository.findByUid(uid);
 
@@ -39,7 +43,8 @@ export class UserService {
 
     const input: UserCreateInput = {
       uid,
-      username,
+      displayName,
+      bio,
     };
 
     return await this.userRepository.create(input);
@@ -48,7 +53,11 @@ export class UserService {
   /**
    * プロフィールを更新
    */
-  async updateProfile(uid: string, username?: string): Promise<User> {
+  async updateProfile(
+    uid: string,
+    displayName?: string,
+    bio?: string
+  ): Promise<User> {
     // 既存ユーザーの確認
     const existingUser = await this.userRepository.findByUid(uid);
 
@@ -58,8 +67,12 @@ export class UserService {
 
     const input: UserUpdateInput = {};
 
-    if (username !== undefined) {
-      input.username = username;
+    if (displayName !== undefined) {
+      input.displayName = displayName;
+    }
+
+    if (bio !== undefined) {
+      input.bio = bio;
     }
 
     return await this.userRepository.update(uid, input);
@@ -116,7 +129,7 @@ export class UserService {
     await this.avatarStorage.deleteAvatar(existingUser.avatarUrl);
 
     // ユーザー情報を更新
-    return await this.userRepository.update(uid, { avatarUrl: null });
+    return await this.userRepository.update(uid, { avatarUrl: undefined });
   }
 
   /**
