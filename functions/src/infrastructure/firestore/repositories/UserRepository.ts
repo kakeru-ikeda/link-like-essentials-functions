@@ -37,8 +37,9 @@ export class UserRepository implements IUserRepository {
     const now = Timestamp.now();
 
     const userData = {
-      username: input.username,
-      avatarUrl: null,
+      displayName: input.displayName,
+      bio: input.bio,
+      avatarUrl: undefined,
       createdAt: now,
       updatedAt: now,
     };

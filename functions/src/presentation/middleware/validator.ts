@@ -41,9 +41,11 @@ export const DeckQuerySchema = z.object({
 
 // User関連のバリデーションスキーマ
 export const UserCreateSchema = z.object({
-  username: z.string().min(1).max(50),
+  displayName: z.string().min(1).max(50),
+  bio: z.string().max(500).optional(),
 });
 
 export const UserUpdateSchema = z.object({
-  username: z.string().min(1).max(50).optional(),
+  displayName: z.string().min(1).max(50).optional(),
+  bio: z.string().max(500).optional(),
 });

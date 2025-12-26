@@ -2,12 +2,33 @@ import type { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 
 import type { UserService } from '@/application/services/UserService';
+import type { User } from '@/domain/entities/User';
 import { ValidationError } from '@/domain/errors/AppError';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   UserCreateSchema,
   UserUpdateSchema,
 } from '@/presentation/middleware/validator';
+
+// フロントエンド向けのUserProfile型
+interface UserProfile {
+  uid: string;
+  displayName: string;
+  bio?: string;
+  avatarUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// UserエンティティをUserProfileに変換
+const toUserProfile = (user: User): UserProfile => ({
+  uid: user.uid,
+  displayName: user.displayName,
+  bio: user.bio,
+  avatarUrl: user.avatarUrl,
+  createdAt: user.createdAt.toDate().toISOString(),
+  updatedAt: user.updatedAt.toDate().toISOString(),
+});
 
 // Multer設定（メモリストレージ）
 const upload = multer({
@@ -47,7 +68,7 @@ export class UserController {
 
       const user = await this.userService.getMyProfile(uid);
 
-      res.status(200).json({ user });
+      res.status(200).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
@@ -71,10 +92,11 @@ export class UserController {
       const validatedBody = UserCreateSchema.parse(req.body);
       const user = await this.userService.createProfile(
         uid,
-        validatedBody.username
+        validatedBody.displayName,
+        validatedBody.bio
       );
 
-      res.status(201).json({ user });
+      res.status(201).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
@@ -98,10 +120,11 @@ export class UserController {
       const validatedBody = UserUpdateSchema.parse(req.body);
       const user = await this.userService.updateProfile(
         uid,
-        validatedBody.username
+        validatedBody.displayName,
+        validatedBody.bio
       );
 
-      res.status(200).json({ user });
+      res.status(200).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
@@ -134,7 +157,7 @@ export class UserController {
         file.mimetype
       );
 
-      res.status(200).json({ user });
+      res.status(200).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
@@ -157,7 +180,7 @@ export class UserController {
 
       const user = await this.userService.deleteAvatar(uid);
 
-      res.status(200).json({ user });
+      res.status(200).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
