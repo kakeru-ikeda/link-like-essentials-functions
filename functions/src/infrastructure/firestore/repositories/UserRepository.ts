@@ -38,8 +38,8 @@ export class UserRepository implements IUserRepository {
 
     const userData = {
       displayName: input.displayName,
-      bio: input.bio,
-      avatarUrl: undefined,
+      bio: input.bio ?? null,
+      avatarUrl: null,
       createdAt: now,
       updatedAt: now,
     };

@@ -14,8 +14,8 @@ import {
 interface UserProfile {
   uid: string;
   displayName: string;
-  bio?: string;
-  avatarUrl?: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }

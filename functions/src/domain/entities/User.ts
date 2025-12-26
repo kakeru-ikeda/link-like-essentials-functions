@@ -3,8 +3,8 @@ import type { Timestamp } from 'firebase-admin/firestore';
 export interface User {
   uid: string; // Firebase Auth UID (匿名ログイン)
   displayName: string; // 表示名
-  bio?: string; // 自己紹介
-  avatarUrl?: string; // アバター画像URL (Firebase Storage)
+  bio?: string | null; // 自己紹介
+  avatarUrl?: string | null; // アバター画像URL (Firebase Storage)
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
