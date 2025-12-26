@@ -32,7 +32,8 @@ export class UserService {
   async createProfile(
     uid: string,
     displayName: string,
-    bio?: string
+    bio?: string,
+    llid?: string
   ): Promise<User> {
     // 既存ユーザーチェック
     const existingUser = await this.userRepository.findByUid(uid);
@@ -43,6 +44,7 @@ export class UserService {
 
     const input: UserCreateInput = {
       uid,
+      llid,
       displayName,
       bio,
     };
@@ -56,7 +58,8 @@ export class UserService {
   async updateProfile(
     uid: string,
     displayName?: string,
-    bio?: string
+    bio?: string,
+    llid?: string
   ): Promise<User> {
     // 既存ユーザーの確認
     const existingUser = await this.userRepository.findByUid(uid);
@@ -66,6 +69,10 @@ export class UserService {
     }
 
     const input: UserUpdateInput = {};
+
+    if (llid !== undefined) {
+      input.llid = llid;
+    }
 
     if (displayName !== undefined) {
       input.displayName = displayName;

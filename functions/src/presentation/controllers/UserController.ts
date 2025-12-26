@@ -13,6 +13,7 @@ import {
 // フロントエンド向けのUserProfile型
 interface UserProfile {
   uid: string;
+  llid?: string | null;
   displayName: string;
   bio?: string | null;
   avatarUrl?: string | null;
@@ -23,6 +24,7 @@ interface UserProfile {
 // UserエンティティをUserProfileに変換
 const toUserProfile = (user: User): UserProfile => ({
   uid: user.uid,
+  llid: user.llid,
   displayName: user.displayName,
   bio: user.bio,
   avatarUrl: user.avatarUrl,
@@ -93,7 +95,8 @@ export class UserController {
       const user = await this.userService.createProfile(
         uid,
         validatedBody.displayName,
-        validatedBody.bio
+        validatedBody.bio,
+        validatedBody.llid
       );
 
       res.status(201).json({ user: toUserProfile(user) });
@@ -121,7 +124,8 @@ export class UserController {
       const user = await this.userService.updateProfile(
         uid,
         validatedBody.displayName,
-        validatedBody.bio
+        validatedBody.bio,
+        validatedBody.llid
       );
 
       res.status(200).json({ user: toUserProfile(user) });

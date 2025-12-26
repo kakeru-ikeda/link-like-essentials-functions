@@ -225,6 +225,7 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 {
   "user": {
     "uid": "...",
+    "llid": "123456789",
     "displayName": "...",
     "bio": "...",
     "avatarUrl": "...",
@@ -240,6 +241,7 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 
 ```json
 {
+  "llid": "string (9桁の文字列, 任意)",
   "displayName": "string (1-50文字)",
   "bio": "string (最大500文字, 任意)"
 }
@@ -259,6 +261,7 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 
 ```json
 {
+  "llid": "string (9桁の文字列, 任意)",
   "displayName": "string (1-50文字, 任意)",
   "bio": "string (最大500文字, 任意)"
 }
@@ -289,6 +292,7 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 {
   "user": {
     "uid": "...",
+    "llid": "123456789",
     "displayName": "...",
     "bio": "...",
     "avatarUrl": "https://...",
@@ -306,6 +310,7 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 {
   "user": {
     "uid": "...",
+    "llid": "123456789",
     "displayName": "...",
     "bio": "...",
     "avatarUrl": null,
