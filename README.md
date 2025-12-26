@@ -60,6 +60,8 @@ functions/
 
 ## API エンドポイント
 
+### Deck API
+
 Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/deckApi`
 
 | メソッド | パス             | 説明           | 認証 |
@@ -69,6 +71,27 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/deckApi`
 | POST     | `/decks`         | デッキ作成     | 必須 |
 | PUT      | `/decks/:deckId` | デッキ更新     | 必須 |
 | DELETE   | `/decks/:deckId` | デッキ削除     | 必須 |
+
+### User API
+
+Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
+
+| メソッド | パス               | 説明                     | 認証 |
+| -------- | ------------------ | ------------------------ | ---- |
+| GET      | `/users/me`        | 自分のプロフィール取得   | 必須 |
+| POST     | `/users/me`        | プロフィール作成         | 必須 |
+| PUT      | `/users/me`        | プロフィール更新         | 必須 |
+| POST     | `/users/me/avatar` | アバター画像アップロード | 必須 |
+| DELETE   | `/users/me/avatar` | アバター画像削除         | 必須 |
+| DELETE   | `/users/me`        | ユーザー削除             | 必須 |
+
+#### User API 詳細
+
+- **認証**: Firebase Auth 匿名ログインの UID に紐付け
+- **アバター画像**:
+  - 最大ファイルサイズ: 5MB
+  - 対応形式: JPEG, PNG, WebP
+  - 保存先: Firebase Storage (`avatars/{uid}/`)
 
 ## コードルール
 

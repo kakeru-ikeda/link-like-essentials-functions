@@ -38,3 +38,12 @@ export const DeckQuerySchema = z.object({
   songId: z.string().optional(),
   tag: z.string().optional(),
 });
+
+// User関連のバリデーションスキーマ
+export const UserCreateSchema = z.object({
+  username: z.string().min(1).max(50),
+});
+
+export const UserUpdateSchema = z.object({
+  username: z.string().min(1).max(50).optional(),
+});

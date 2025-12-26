@@ -38,6 +38,12 @@ export class ForbiddenError extends AppError {
   }
 }
 
+export class ConflictError extends AppError {
+  constructor(message: string = 'リソースが既に存在します') {
+    super(message, 'CONFLICT', 409);
+  }
+}
+
 export class InternalServerError extends AppError {
   constructor(message: string = 'サーバーエラーが発生しました') {
     super(message, 'INTERNAL_SERVER_ERROR', 500);
