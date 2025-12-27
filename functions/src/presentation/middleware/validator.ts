@@ -64,8 +64,8 @@ export const UserCreateSchema = z.object({
 });
 
 export const UserUpdateSchema = z.object({
-  llid: z.union([z.string().length(9), z.literal('')]).optional(),
-  displayName: z.string().min(1).max(50),
-  bio: z.union([z.string().max(500), z.literal('')]).optional(),
+  llid: z.string().length(9).optional(),
+  displayName: z.string().min(1).max(50).optional(),
+  bio: z.string().max(500).optional(),
   avatarUrl: tmpAvatarUrlSchema.optional(),
 });
