@@ -19,8 +19,8 @@ export interface UserCreateInput {
 }
 
 export interface UserUpdateInput {
-  llid?: string;
+  llid?: string | null;
   displayName?: string;
-  bio?: string;
-  avatarUrl?: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
 }
