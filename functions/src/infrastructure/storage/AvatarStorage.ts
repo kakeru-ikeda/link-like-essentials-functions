@@ -1,6 +1,8 @@
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
+import { ValidationError } from '@/domain/errors/AppError';
+
 export class AvatarStorage {
   private bucket: admin.storage.Storage;
   private readonly BUCKET_PATH = 'avatars';
@@ -13,6 +15,71 @@ export class AvatarStorage {
 
   constructor() {
     this.bucket = admin.storage();
+  }
+
+  /**
+   * tmpディレクトリの画像を永続的なディレクトリに移動
+   * 注: tmpUrl は事前にバリデーション済みであることを前提とする
+   */
+  async moveFromTmpToUserAvatar(tmpUrl: string, uid: string): Promise<string> {
+    try {
+      // tmpファイルのパスを抽出
+      const tmpFilePath = this.extractFilePathFromUrl(tmpUrl);
+      const tmpFile = this.bucket.bucket().file(tmpFilePath);
+
+      // ファイルの存在確認
+      const [exists] = await tmpFile.exists();
+      if (!exists) {
+        throw new ValidationError('指定されたtmp画像が見つかりません');
+      }
+
+      // メタデータ取得
+      const [metadata] = await tmpFile.getMetadata();
+      const mimeType = metadata.contentType;
+
+      if (!mimeType || !this.ALLOWED_MIME_TYPES.includes(mimeType)) {
+        throw new ValidationError('許可されていないファイル形式です');
+      }
+
+      // 拡張子取得
+      const ext = mimeType.split('/')[1];
+      const destFilePath = `${this.BUCKET_PATH}/${uid}/avatar.${ext}`;
+
+      // 既存のアバターを削除（拡張子が異なる可能性があるため全削除）
+      await this.deleteAllUserAvatars(uid);
+
+      // ファイルを移動（コピー→削除）
+      const destFile = this.bucket.bucket().file(destFilePath);
+      await tmpFile.copy(destFile);
+      await tmpFile.delete();
+
+      // 公開URLを取得
+      await destFile.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${this.bucket.bucket().name}/${destFilePath}`;
+
+      return publicUrl;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new Error('アバター画像の移動に失敗しました');
+    }
+  }
+
+  /**
+   * URLからファイルパスを抽出
+   */
+  private extractFilePathFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathMatch = urlObj.pathname.match(/\/o\/(.+)/);
+      if (!pathMatch || !pathMatch[1]) {
+        throw new Error('Invalid URL format');
+      }
+      return decodeURIComponent(pathMatch[1]);
+    } catch {
+      throw new ValidationError('無効なStorage URLです');
+    }
   }
 
   /**

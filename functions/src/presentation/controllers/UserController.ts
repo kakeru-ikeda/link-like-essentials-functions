@@ -1,9 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import multer from 'multer';
 
 import type { UserService } from '@/application/services/UserService';
 import type { User } from '@/domain/entities/User';
-import { ValidationError } from '@/domain/errors/AppError';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   UserCreateSchema,
@@ -32,25 +30,7 @@ const toUserProfile = (user: User): UserProfile => ({
   updatedAt: user.updatedAt.toDate().toISOString(),
 });
 
-// Multer設定（メモリストレージ）
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-  },
-  fileFilter: (_req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (allowedMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('許可されていないファイル形式です'));
-    }
-  },
-});
-
 export class UserController {
-  public uploadMiddleware = upload.single('avatar');
-
   constructor(private userService: UserService) {}
 
   /**
@@ -96,7 +76,8 @@ export class UserController {
         uid,
         validatedBody.displayName,
         validatedBody.bio,
-        validatedBody.llid
+        validatedBody.llid,
+        validatedBody.avatarUrl
       );
 
       res.status(201).json({ user: toUserProfile(user) });
@@ -125,40 +106,8 @@ export class UserController {
         uid,
         validatedBody.displayName,
         validatedBody.bio,
-        validatedBody.llid
-      );
-
-      res.status(200).json({ user: toUserProfile(user) });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * POST /users/me/avatar - アバター画像アップロード
-   */
-  public uploadAvatar = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const uid = (req as AuthRequest).user?.uid;
-
-      if (!uid) {
-        throw new Error('認証情報が不正です');
-      }
-
-      const file = req.file;
-
-      if (!file) {
-        throw new ValidationError('ファイルが指定されていません');
-      }
-
-      const user = await this.userService.uploadAvatar(
-        uid,
-        file.buffer,
-        file.mimetype
+        validatedBody.llid,
+        validatedBody.avatarUrl
       );
 
       res.status(200).json({ user: toUserProfile(user) });

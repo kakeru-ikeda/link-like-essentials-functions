@@ -33,7 +33,8 @@ export class UserService {
     uid: string,
     displayName: string,
     bio?: string,
-    llid?: string
+    llid?: string,
+    avatarUrl?: string
   ): Promise<User> {
     // 既存ユーザーチェック
     const existingUser = await this.userRepository.findByUid(uid);
@@ -49,6 +50,14 @@ export class UserService {
       bio,
     };
 
+    // avatarUrlが指定されている場合、tmpから移動
+    if (avatarUrl) {
+      input.avatarUrl = await this.avatarStorage.moveFromTmpToUserAvatar(
+        avatarUrl,
+        uid
+      );
+    }
+
     return await this.userRepository.create(input);
   }
 
@@ -59,7 +68,8 @@ export class UserService {
     uid: string,
     displayName?: string,
     bio?: string,
-    llid?: string
+    llid?: string,
+    avatarUrl?: string
   ): Promise<User> {
     // 既存ユーザーの確認
     const existingUser = await this.userRepository.findByUid(uid);
@@ -82,38 +92,20 @@ export class UserService {
       input.bio = bio;
     }
 
+    // avatarUrlが指定されている場合、tmpから移動
+    if (avatarUrl !== undefined) {
+      // 既存のアバターがある場合は削除
+      if (existingUser.avatarUrl) {
+        await this.avatarStorage.deleteAvatar(existingUser.avatarUrl);
+      }
+
+      input.avatarUrl = await this.avatarStorage.moveFromTmpToUserAvatar(
+        avatarUrl,
+        uid
+      );
+    }
+
     return await this.userRepository.update(uid, input);
-  }
-
-  /**
-   * アバター画像をアップロード
-   */
-  async uploadAvatar(
-    uid: string,
-    fileBuffer: Buffer,
-    mimeType: string
-  ): Promise<User> {
-    // 既存ユーザーの確認
-    const existingUser = await this.userRepository.findByUid(uid);
-
-    if (!existingUser) {
-      throw new NotFoundError('ユーザーが見つかりません');
-    }
-
-    // 既存のアバターがある場合は削除
-    if (existingUser.avatarUrl) {
-      await this.avatarStorage.deleteAvatar(existingUser.avatarUrl);
-    }
-
-    // 新しいアバターをアップロード
-    const avatarUrl = await this.avatarStorage.uploadAvatar(
-      uid,
-      fileBuffer,
-      mimeType
-    );
-
-    // ユーザー情報を更新
-    return await this.userRepository.update(uid, { avatarUrl });
   }
 
   /**

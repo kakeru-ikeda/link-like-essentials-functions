@@ -208,14 +208,13 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/deckApi`
 
 Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 
-| メソッド | パス               | 説明                     | 認証 |
-| -------- | ------------------ | ------------------------ | ---- |
-| GET      | `/users/me`        | 自分のプロフィール取得   | 必須 |
-| POST     | `/users/me`        | プロフィール作成         | 必須 |
-| PUT      | `/users/me`        | プロフィール更新         | 必須 |
-| POST     | `/users/me/avatar` | アバター画像アップロード | 必須 |
-| DELETE   | `/users/me/avatar` | アバター画像削除         | 必須 |
-| DELETE   | `/users/me`        | ユーザー削除             | 必須 |
+| メソッド | パス               | 説明                   | 認証 |
+| -------- | ------------------ | ---------------------- | ---- |
+| GET      | `/users/me`        | 自分のプロフィール取得 | 必須 |
+| POST     | `/users/me`        | プロフィール作成       | 必須 |
+| PUT      | `/users/me`        | プロフィール更新       | 必須 |
+| DELETE   | `/users/me/avatar` | アバター画像削除       | 必須 |
+| DELETE   | `/users/me`        | ユーザー削除           | 必須 |
 
 #### GET /users/me - 自分のプロフィール取得
 
@@ -243,9 +242,14 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 {
   "llid": "string (9桁の文字列, 任意)",
   "displayName": "string (1-50文字)",
-  "bio": "string (最大500文字, 任意)"
+  "bio": "string (最大500文字, 任意)",
+  "avatarUrl": "string (任意)"
 }
 ```
+
+- `avatarUrl` は `/tmp/` を含む Storage URL のみ受け付けます
+- 正常な URL 形式: `https://firebasestorage.googleapis.com/v0/b/{bucket}/o/tmp%2F{filename}?alt=media&token={token}`
+- 指定された場合、`/tmp/` から `/users/{uid}/avatar.{ext}` に移動されます
 
 **レスポンス例:**
 
@@ -274,31 +278,6 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 ```json
 {
   "user": {...}
-}
-```
-
-#### POST /users/me/avatar - アバター画像アップロード
-
-**リクエスト:**
-
-- Content-Type: `multipart/form-data`
-- フィールド名: `avatar`
-- ファイル形式: JPEG, PNG, WebP
-- 最大ファイルサイズ: 5MB
-
-**レスポンス例:**
-
-```json
-{
-  "user": {
-    "uid": "...",
-    "llid": "123456789",
-    "displayName": "...",
-    "bio": "...",
-    "avatarUrl": "https://...",
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
 }
 ```
 

@@ -40,14 +40,32 @@ export const DeckQuerySchema = z.object({
 });
 
 // User関連のバリデーションスキーマ
+const tmpAvatarUrlSchema = z
+  .string()
+  .url()
+  .refine((url) => url.includes('/tmp%2F') || url.includes('/tmp/'), {
+    message: 'avatarUrlは/tmpディレクトリのStorage URLである必要があります',
+  })
+  .refine(
+    (url) =>
+      /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/.+/.test(
+        url
+      ),
+    {
+      message: '無効なStorage URLです',
+    }
+  );
+
 export const UserCreateSchema = z.object({
   llid: z.string().length(9).optional(),
   displayName: z.string().min(1).max(50),
   bio: z.string().max(500).optional(),
+  avatarUrl: tmpAvatarUrlSchema.optional(),
 });
 
 export const UserUpdateSchema = z.object({
   llid: z.string().length(9).optional(),
   displayName: z.string().min(1).max(50).optional(),
   bio: z.string().max(500).optional(),
+  avatarUrl: tmpAvatarUrlSchema.optional(),
 });

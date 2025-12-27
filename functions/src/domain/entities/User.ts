@@ -15,6 +15,7 @@ export interface UserCreateInput {
   llid?: string;
   displayName: string;
   bio?: string;
+  avatarUrl?: string;
 }
 
 export interface UserUpdateInput {
