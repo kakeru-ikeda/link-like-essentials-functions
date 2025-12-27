@@ -66,7 +66,7 @@ export class UserService {
    */
   async updateProfile(
     uid: string,
-    displayName: string,
+    displayName?: string,
     bio?: string | null,
     llid?: string | null,
     avatarUrl?: string
@@ -80,21 +80,20 @@ export class UserService {
 
     const input: UserUpdateInput = {};
 
-    // displayNameは必須
-    input.displayName = displayName;
-
-    // llidは空文字の場合nullに変換
     if (llid !== undefined) {
-      input.llid = llid === '' ? null : llid;
+      input.llid = llid || null; // 空文字列の場合はnullに変換
     }
 
-    // bioは空文字の場合nullに変換
+    if (displayName !== undefined) {
+      input.displayName = displayName;
+    }
+
     if (bio !== undefined) {
-      input.bio = bio === '' ? null : bio;
+      input.bio = bio || null; // 空文字列の場合はnullに変換
     }
 
-    // avatarUrlが指定されており、かつ空文字でない場合のみ処理
-    if (avatarUrl !== undefined && avatarUrl !== '') {
+    // avatarUrlが指定されている場合、tmpから移動
+    if (avatarUrl !== undefined) {
       // 既存のアバターがある場合は削除
       if (existingUser.avatarUrl) {
         await this.avatarStorage.deleteAvatar(existingUser.avatarUrl);
