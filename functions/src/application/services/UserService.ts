@@ -67,8 +67,8 @@ export class UserService {
   async updateProfile(
     uid: string,
     displayName?: string,
-    bio?: string,
-    llid?: string,
+    bio?: string | null,
+    llid?: string | null,
     avatarUrl?: string
   ): Promise<User> {
     // 既存ユーザーの確認
@@ -81,7 +81,7 @@ export class UserService {
     const input: UserUpdateInput = {};
 
     if (llid !== undefined) {
-      input.llid = llid;
+      input.llid = llid || null; // 空文字列の場合はnullに変換
     }
 
     if (displayName !== undefined) {
@@ -89,7 +89,7 @@ export class UserService {
     }
 
     if (bio !== undefined) {
-      input.bio = bio;
+      input.bio = bio || null; // 空文字列の場合はnullに変換
     }
 
     // avatarUrlが指定されている場合、tmpから移動
@@ -128,7 +128,7 @@ export class UserService {
     await this.avatarStorage.deleteAvatar(existingUser.avatarUrl);
 
     // ユーザー情報を更新
-    return await this.userRepository.update(uid, { avatarUrl: undefined });
+    return await this.userRepository.update(uid, { avatarUrl: null });
   }
 
   /**
