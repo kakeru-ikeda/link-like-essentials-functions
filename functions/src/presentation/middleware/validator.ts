@@ -91,8 +91,6 @@ const DeckForCloudSchema = z.object({
   liveGrandPrixDetailId: z.string().optional(),
   score: z.number().optional(),
   memo: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
 });
 
 // デッキ公開リクエストスキーマ

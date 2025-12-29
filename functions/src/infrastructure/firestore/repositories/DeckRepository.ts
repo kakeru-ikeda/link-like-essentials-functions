@@ -67,9 +67,9 @@ export class DeckRepository implements IDeckRepository {
       imageUrls: movedImageUrls,
       viewCount: 0,
       likeCount: 0,
-      publishedAt: now,
-      createdAt: now,
-      updatedAt: now,
+      publishedAt: now, // サーバー生成のタイムスタンプ
+      createdAt: now,   // サーバー生成のタイムスタンプ（PublishedDeckレベル）
+      updatedAt: now,   // サーバー生成のタイムスタンプ（PublishedDeckレベル）
     };
 
     const docRef = this.firestoreClient

@@ -11,6 +11,7 @@ export interface DeckSlotForCloud {
 
 /**
  * デッキ基本情報（クラウド用）
+ * 
  */
 export interface DeckForCloud {
   id: string;
@@ -23,8 +24,8 @@ export interface DeckForCloud {
   liveGrandPrixDetailId?: string;
   score?: number;
   memo?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string; // オプショナル: クライアント側のタイムスタンプ（サーバー側では無視される）
+  updatedAt?: string; // オプショナル: クライアント側のタイムスタンプ（サーバー側では無視される）
 }
 
 /**
