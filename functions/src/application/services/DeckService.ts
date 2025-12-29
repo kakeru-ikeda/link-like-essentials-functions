@@ -5,11 +5,7 @@ import type {
   PageInfo,
   PublishedDeck,
 } from '@/domain/entities/Deck';
-import {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-} from '@/domain/errors/AppError';
+import { ForbiddenError, NotFoundError } from '@/domain/errors/AppError';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import type { IUserRepository } from '@/domain/repositories/IUserRepository';
 
@@ -31,9 +27,6 @@ export class DeckService {
     if (!user) {
       throw new NotFoundError('ユーザーが見つかりません');
     }
-
-    // バリデーション
-    this.validatePublishRequest(request);
 
     // 公開処理
     return await this.deckRepository.publishDeck(
@@ -151,37 +144,5 @@ export class DeckService {
     }
 
     await this.deckRepository.reportDeck(deckId, userId, reason, details);
-  }
-
-  /**
-   * デッキ公開リクエストのバリデーション
-   */
-  private validatePublishRequest(request: DeckPublicationRequest): void {
-    // ID形式チェック（nanoid 21文字）
-    if (!request.id || request.id.length !== 21) {
-      throw new ValidationError('公開IDの形式が不正です');
-    }
-
-    // デッキ名チェック
-    if (!request.deck.name || request.deck.name.length > 255) {
-      throw new ValidationError(
-        'デッキ名は1文字以上255文字以下で入力してください'
-      );
-    }
-
-    // スロット数チェック
-    if (request.deck.slots.length !== 18) {
-      throw new ValidationError('デッキのスロット数は18個である必要があります');
-    }
-
-    // コメント長チェック
-    if (request.comment && request.comment.length > 1000) {
-      throw new ValidationError('コメントは1000文字以下で入力してください');
-    }
-
-    // 画像枚数チェック
-    if (request.imageUrls && request.imageUrls.length > 3) {
-      throw new ValidationError('画像は最大3枚までアップロードできます');
-    }
   }
 }
