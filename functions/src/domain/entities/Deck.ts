@@ -11,7 +11,7 @@ export interface DeckSlotForCloud {
 
 /**
  * デッキ基本情報（クラウド用）
- * 
+ *
  */
 export interface DeckForCloud {
   id: string;
