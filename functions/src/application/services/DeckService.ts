@@ -1,75 +1,148 @@
 import type {
-  Deck,
-  DeckCreateInput,
-  DeckUpdateInput,
+  DeckComment,
+  DeckPublicationRequest,
+  GetDecksParams,
+  PageInfo,
+  PublishedDeck,
 } from '@/domain/entities/Deck';
 import { ForbiddenError, NotFoundError } from '@/domain/errors/AppError';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
+import type { IUserRepository } from '@/domain/repositories/IUserRepository';
 
 export class DeckService {
-  constructor(private deckRepository: IDeckRepository) {}
+  constructor(
+    private deckRepository: IDeckRepository,
+    private userRepository: IUserRepository
+  ) {}
 
-  async getDecks(params?: {
-    limit?: number;
-    orderBy?: 'createdAt' | 'updatedAt' | 'viewCount';
-    order?: 'asc' | 'desc';
-    userId?: string;
-    songId?: string;
-    tag?: string;
-  }): Promise<{ decks: Deck[]; total: number }> {
-    return await this.deckRepository.findAll(params);
-  }
-
-  async getDeck(deckId: string): Promise<Deck> {
-    const deck = await this.deckRepository.findById(deckId);
-
-    if (!deck) {
-      throw new NotFoundError('デッキが見つかりません');
+  /**
+   * デッキを公開
+   */
+  async publishDeck(
+    request: DeckPublicationRequest,
+    userId: string
+  ): Promise<PublishedDeck> {
+    // ユーザー情報取得
+    const user = await this.userRepository.findByUid(userId);
+    if (!user) {
+      throw new NotFoundError('ユーザーが見つかりません');
     }
 
-    // 閲覧数を増加
-    await this.deckRepository.incrementViewCount(deckId);
+    // 公開処理
+    return await this.deckRepository.publishDeck(
+      request,
+      userId,
+      user.displayName
+    );
+  }
 
+  /**
+   * デッキ一覧を取得
+   */
+  async getPublishedDecks(
+    params: GetDecksParams
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    return await this.deckRepository.findPublishedDecks(params);
+  }
+
+  /**
+   * デッキ詳細を取得
+   */
+  async getPublishedDeckById(id: string): Promise<PublishedDeck> {
+    const deck = await this.deckRepository.findPublishedDeckById(id);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
     return deck;
   }
 
-  async createDeck(input: DeckCreateInput): Promise<Deck> {
-    return await this.deckRepository.create(input);
-  }
-
-  async updateDeck(
-    deckId: string,
-    userId: string,
-    input: DeckUpdateInput
-  ): Promise<Deck> {
-    // 既存デッキの取得
-    const existingDeck = await this.deckRepository.findById(deckId);
-
-    if (!existingDeck) {
-      throw new NotFoundError('デッキが見つかりません');
+  /**
+   * デッキを削除
+   */
+  async deleteDeck(id: string, userId: string): Promise<void> {
+    const deck = await this.deckRepository.findPublishedDeckById(id);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
     }
 
-    // 権限チェック（自分のデッキのみ更新可能）
-    if (existingDeck.userId !== userId) {
-      throw new ForbiddenError('このデッキを更新する権限がありません');
-    }
-
-    return await this.deckRepository.update(deckId, input);
-  }
-
-  async deleteDeck(deckId: string, userId: string): Promise<void> {
-    // 既存デッキの取得
-    const existingDeck = await this.deckRepository.findById(deckId);
-
-    if (!existingDeck) {
-      throw new NotFoundError('デッキが見つかりません');
-    }
-
-    // 権限チェック（自分のデッキのみ削除可能）
-    if (existingDeck.userId !== userId) {
+    if (deck.userId !== userId) {
       throw new ForbiddenError('このデッキを削除する権限がありません');
     }
 
-    await this.deckRepository.delete(deckId);
+    await this.deckRepository.deleteDeck(id, userId);
+  }
+
+  /**
+   * いいねを追加
+   */
+  async addLike(deckId: string, userId: string): Promise<number> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    return await this.deckRepository.addLike(deckId, userId);
+  }
+
+  /**
+   * いいねを削除
+   */
+  async removeLike(deckId: string, userId: string): Promise<number> {
+    return await this.deckRepository.removeLike(deckId, userId);
+  }
+
+  /**
+   * 閲覧数をカウント
+   */
+  async incrementViewCount(deckId: string, userId: string): Promise<number> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    return await this.deckRepository.incrementViewCount(deckId, userId);
+  }
+
+  /**
+   * コメントを追加
+   */
+  async addComment(
+    deckId: string,
+    userId: string,
+    text: string
+  ): Promise<DeckComment> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    const user = await this.userRepository.findByUid(userId);
+    if (!user) {
+      throw new NotFoundError('ユーザーが見つかりません');
+    }
+
+    return await this.deckRepository.addComment(
+      deckId,
+      userId,
+      user.displayName,
+      text
+    );
+  }
+
+  /**
+   * デッキを通報
+   */
+  async reportDeck(
+    deckId: string,
+    userId: string,
+    reason: string,
+    details?: string
+  ): Promise<void> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    await this.deckRepository.reportDeck(deckId, userId, reason, details);
   }
 }

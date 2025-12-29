@@ -20,4 +20,14 @@ export class FirestoreClient {
   public doc(path: string): FirebaseFirestore.DocumentReference {
     return this.db.doc(path);
   }
+
+  public batch(): FirebaseFirestore.WriteBatch {
+    return this.db.batch();
+  }
+
+  public runTransaction<T>(
+    updateFunction: (transaction: FirebaseFirestore.Transaction) => Promise<T>
+  ): Promise<T> {
+    return this.db.runTransaction(updateFunction);
+  }
 }

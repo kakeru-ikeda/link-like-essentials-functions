@@ -1,43 +1,105 @@
 import type { Timestamp } from 'firebase-admin/firestore';
 
-export interface DeckSlot {
-  slotId: number; // 0-17
+/**
+ * デッキスロット（クラウド用）
+ */
+export interface DeckSlotForCloud {
+  slotId: number;
   cardId: string | null;
-  limitBreak?: number; // 1-14
+  limitBreak?: number;
 }
 
-export interface Deck {
-  id: string; // UUID
-  userId: string; // 作成者のAuthUID
+/**
+ * デッキ基本情報（クラウド用）
+ *
+ */
+export interface DeckForCloud {
+  id: string;
   name: string;
-  slots: DeckSlot[];
+  slots: DeckSlotForCloud[];
   aceSlotId: number | null;
-  deckType?: string; // 例: "105期"
+  deckType?: string;
   songId?: string;
+  liveGrandPrixId?: string;
+  liveGrandPrixDetailId?: string;
+  score?: number;
   memo?: string;
-  tags: string[]; // 検索用タグ（サーバーサイドで自動生成）
-  viewCount: number; // 閲覧数
-  likeCount: number; // いいね数（将来的に実装）
+  createdAt?: string; // オプショナル: クライアント側のタイムスタンプ（サーバー側では無視される）
+  updatedAt?: string; // オプショナル: クライアント側のタイムスタンプ（サーバー側では無視される）
+}
+
+/**
+ * 公開済みデッキ型（Firestore格納用）
+ */
+export interface PublishedDeck {
+  id: string;
+  deck: DeckForCloud;
+  userId: string;
+  userName: string;
+  comment?: string;
+  hashtags: string[];
+  imageUrls?: string[];
+  viewCount: number;
+  likeCount: number;
+  publishedAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
-export interface DeckCreateInput {
+/**
+ * デッキ公開リクエスト（フロントエンドから受信）
+ */
+export type DeckPublicationRequest = Pick<
+  PublishedDeck,
+  'id' | 'deck' | 'comment' | 'hashtags' | 'imageUrls'
+>;
+
+/**
+ * デッキコメント型
+ */
+export interface DeckComment {
   id: string;
+  deckId: string;
   userId: string;
-  name: string;
-  slots: DeckSlot[];
-  aceSlotId: number | null;
-  deckType?: string;
-  songId?: string;
-  memo?: string;
+  userName: string;
+  text: string;
+  createdAt: Timestamp;
 }
 
-export interface DeckUpdateInput {
-  name?: string;
-  slots?: DeckSlot[];
-  aceSlotId?: number | null;
-  deckType?: string;
+/**
+ * デッキ通報型
+ */
+export interface DeckReport {
+  id: string;
+  deckId: string;
+  reportedBy: string;
+  reason: 'inappropriate_content' | 'spam' | 'copyright' | 'other';
+  details?: string;
+  createdAt: Timestamp;
+}
+
+/**
+ * ページネーション情報
+ */
+export interface PageInfo {
+  currentPage: number;
+  perPage: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+/**
+ * デッキ一覧取得パラメータ
+ */
+export interface GetDecksParams {
+  page?: number;
+  perPage?: number;
+  orderBy?: 'publishedAt' | 'viewCount' | 'likeCount';
+  order?: 'asc' | 'desc';
+  userId?: string;
   songId?: string;
-  memo?: string;
+  tag?: string;
+  keyword?: string;
 }

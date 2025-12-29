@@ -1,92 +1,169 @@
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { Timestamp } from 'firebase-admin/firestore';
 
 import type {
-  Deck,
-  DeckCreateInput,
-  DeckUpdateInput,
+  DeckComment,
+  DeckPublicationRequest,
+  DeckReport,
+  GetDecksParams,
+  PageInfo,
+  PublishedDeck,
 } from '@/domain/entities/Deck';
-import { NotFoundError } from '@/domain/errors/AppError';
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from '@/domain/errors/AppError';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import { FirestoreClient } from '@/infrastructure/firestore/FirestoreClient';
+import { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
 
 export class DeckRepository implements IDeckRepository {
-  private readonly COLLECTION_NAME = 'decks';
+  private readonly PUBLISHED_DECKS_COLLECTION = 'published_decks';
+  private readonly DECK_LIKES_COLLECTION = 'deck_likes';
+  private readonly DECK_VIEWS_COLLECTION = 'deck_views';
+  private readonly DECK_COMMENTS_COLLECTION = 'deck_comments';
+  private readonly DECK_REPORTS_COLLECTION = 'deck_reports';
+
   private firestoreClient: FirestoreClient;
+  private deckImageStorage: DeckImageStorage;
 
   constructor() {
     this.firestoreClient = new FirestoreClient();
+    this.deckImageStorage = new DeckImageStorage();
   }
 
   /**
-   * タグを自動生成
+   * デッキを公開
    */
-  private generateTags(deck: DeckCreateInput | DeckUpdateInput): string[] {
-    const tags = new Set<string>();
+  async publishDeck(
+    request: DeckPublicationRequest,
+    userId: string,
+    userName: string
+  ): Promise<PublishedDeck> {
+    const now = Timestamp.now();
 
-    if ('deckType' in deck && deck.deckType) {
-      tags.add(deck.deckType);
+    // 公開IDの重複チェック
+    const existingDeck = await this.findPublishedDeckById(request.id);
+    if (existingDeck) {
+      throw new ConflictError('指定された公開IDは既に使用されています');
     }
 
-    if ('songId' in deck && deck.songId) {
-      tags.add(`song:${deck.songId}`);
+    // 画像URLをtmpから永続ディレクトリに移動
+    let movedImageUrls: string[] | undefined;
+    if (request.imageUrls && request.imageUrls.length > 0) {
+      movedImageUrls = await this.deckImageStorage.moveFromTmpToDeckImages(
+        request.imageUrls,
+        request.id
+      );
     }
 
-    return Array.from(tags);
+    const publishedDeckData: PublishedDeck = {
+      id: request.id,
+      deck: request.deck,
+      userId,
+      userName,
+      comment: request.comment,
+      hashtags: request.hashtags || [],
+      imageUrls: movedImageUrls,
+      viewCount: 0,
+      likeCount: 0,
+      publishedAt: now, // サーバー生成のタイムスタンプ
+      createdAt: now, // サーバー生成のタイムスタンプ（PublishedDeckレベル）
+      updatedAt: now, // サーバー生成のタイムスタンプ（PublishedDeckレベル）
+    };
+
+    const docRef = this.firestoreClient
+      .collection(this.PUBLISHED_DECKS_COLLECTION)
+      .doc(request.id);
+
+    await docRef.set(publishedDeckData);
+
+    return publishedDeckData;
   }
 
-  async findAll(params?: {
-    limit?: number;
-    orderBy?: 'createdAt' | 'updatedAt' | 'viewCount';
-    order?: 'asc' | 'desc';
-    userId?: string;
-    songId?: string;
-    tag?: string;
-  }): Promise<{ decks: Deck[]; total: number }> {
-    const limit = params?.limit ?? 20;
-    const orderBy = params?.orderBy ?? 'updatedAt';
-    const order = params?.order ?? 'desc';
+  /**
+   * 公開デッキ一覧を取得（ページネーション付き）
+   */
+  async findPublishedDecks(
+    params: GetDecksParams
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    const page = params.page || 1;
+    const perPage = Math.min(params.perPage || 20, 100);
+    const orderBy = params.orderBy || 'publishedAt';
+    const order = params.order || 'desc';
 
-    let query = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .limit(limit > 100 ? 100 : limit);
+    let query: FirebaseFirestore.CollectionReference | FirebaseFirestore.Query =
+      this.firestoreClient.collection(this.PUBLISHED_DECKS_COLLECTION);
 
-    // フィルタリング
-    if (params?.userId) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-      query = query.where('userId', '==', params.userId) as any;
+    // フィルタ条件を適用
+    if (params.userId) {
+      query = query.where('userId', '==', params.userId);
     }
 
-    if (params?.songId) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-      query = query.where('songId', '==', params.songId) as any;
+    if (params.songId) {
+      query = query.where('deck.songId', '==', params.songId);
     }
 
-    if (params?.tag) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-      query = query.where('tags', 'array-contains', params.tag) as any;
+    if (params.tag) {
+      query = query.where('hashtags', 'array-contains', params.tag);
     }
 
     // ソート
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
-    query = query.orderBy(orderBy, order) as any;
+    query = query.orderBy(orderBy, order);
+
+    // 総件数を取得（キーワード検索がない場合）
+    let totalCount = 0;
+    if (!params.keyword) {
+      const countSnapshot = await query.count().get();
+      totalCount = countSnapshot.data().count;
+    }
+
+    // ページネーション
+    const offset = (page - 1) * perPage;
+    query = query.offset(offset).limit(perPage);
 
     const snapshot = await query.get();
+    let decks = snapshot.docs.map(
+      (doc) =>
+        ({
+          ...doc.data(),
+          id: doc.id,
+        }) as PublishedDeck
+    );
 
-    const decks: Deck[] = snapshot.docs.map((doc) => ({
-      ...(doc.data() as Deck),
-      id: doc.id,
-    }));
+    // キーワード検索（クライアント側フィルタリング）
+    if (params.keyword) {
+      const keyword = params.keyword.toLowerCase();
+      decks = decks.filter(
+        (deck) =>
+          deck.deck.name.toLowerCase().includes(keyword) ||
+          deck.comment?.toLowerCase().includes(keyword) ||
+          deck.hashtags.some((tag) => tag.toLowerCase().includes(keyword))
+      );
+      totalCount = decks.length;
+    }
 
-    return {
-      decks,
-      total: decks.length,
+    // ページネーション情報
+    const totalPages = Math.ceil(totalCount / perPage);
+    const pageInfo: PageInfo = {
+      currentPage: page,
+      perPage,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
     };
+
+    return { decks, pageInfo };
   }
 
-  async findById(deckId: string): Promise<Deck | null> {
+  /**
+   * 公開デッキを1件取得
+   */
+  async findPublishedDeckById(id: string): Promise<PublishedDeck | null> {
     const docRef = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .doc(deckId);
+      .collection(this.PUBLISHED_DECKS_COLLECTION)
+      .doc(id);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -94,84 +171,321 @@ export class DeckRepository implements IDeckRepository {
     }
 
     return {
-      ...(doc.data() as Deck),
+      ...(doc.data() as PublishedDeck),
       id: doc.id,
     };
   }
 
-  async create(input: DeckCreateInput): Promise<Deck> {
-    const tags = this.generateTags(input);
-    const now = Timestamp.now();
+  /**
+   * 公開デッキを削除
+   */
+  async deleteDeck(id: string, userId: string): Promise<void> {
+    const deck = await this.findPublishedDeckById(id);
 
-    const deckData = {
-      ...input,
-      tags,
-      viewCount: 0,
-      likeCount: 0,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const docRef = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .doc(input.id);
-
-    // setを使用して新規作成または上書き
-    await docRef.set(deckData);
-
-    return {
-      ...deckData,
-      id: input.id,
-    };
-  }
-
-  async update(deckId: string, input: DeckUpdateInput): Promise<Deck> {
-    const docRef = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .doc(deckId);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      throw new NotFoundError('デッキが見つかりません');
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
     }
 
-    const tags = this.generateTags(input);
-    const updateData: Record<string, unknown> = {
-      ...input,
-      tags,
-      updatedAt: Timestamp.now(),
-    };
-
-    // setを使用してマージ更新（既存データを保持しつつ更新）
-    await docRef.set(updateData, { merge: true });
-
-    const updatedDoc = await docRef.get();
-    return {
-      ...(updatedDoc.data() as Deck),
-      id: updatedDoc.id,
-    };
-  }
-
-  async delete(deckId: string): Promise<void> {
-    const docRef = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .doc(deckId);
-    const doc = await docRef.get();
-
-    if (!doc.exists) {
-      throw new NotFoundError('デッキが見つかりません');
+    if (deck.userId !== userId) {
+      throw new ForbiddenError('このデッキを削除する権限がありません');
     }
+
+    // デッキ画像を削除
+    if (deck.imageUrls && deck.imageUrls.length > 0) {
+      await this.deckImageStorage.deleteAllDeckImages(id).catch(console.error);
+    }
+
+    const docRef = this.firestoreClient
+      .collection(this.PUBLISHED_DECKS_COLLECTION)
+      .doc(id);
 
     await docRef.delete();
+
+    // 関連データも削除（いいね、閲覧、コメント）
+    await this.deleteDeckRelatedData(id);
   }
 
-  async incrementViewCount(deckId: string): Promise<void> {
-    const docRef = this.firestoreClient
-      .collection(this.COLLECTION_NAME)
-      .doc(deckId);
+  /**
+   * 関連データを削除
+   */
+  private async deleteDeckRelatedData(deckId: string): Promise<void> {
+    const batch = this.firestoreClient.batch();
 
-    await docRef.update({
-      viewCount: FieldValue.increment(1),
+    // いいねを削除
+    const likesSnapshot = await this.firestoreClient
+      .collection(this.DECK_LIKES_COLLECTION)
+      .where('deckId', '==', deckId)
+      .get();
+
+    likesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
     });
+
+    // 閲覧履歴を削除
+    const viewsSnapshot = await this.firestoreClient
+      .collection(this.DECK_VIEWS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .get();
+
+    viewsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // コメントを削除
+    const commentsSnapshot = await this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .get();
+
+    commentsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+  }
+
+  /**
+   * いいねを追加
+   */
+  async addLike(deckId: string, userId: string): Promise<number> {
+    const now = Timestamp.now();
+
+    // トランザクションでいいねを追加
+    return await this.firestoreClient.runTransaction(async (transaction) => {
+      const deckRef = this.firestoreClient
+        .collection(this.PUBLISHED_DECKS_COLLECTION)
+        .doc(deckId);
+
+      const deckDoc = await transaction.get(deckRef);
+
+      if (!deckDoc.exists) {
+        throw new NotFoundError('指定されたデッキが見つかりません');
+      }
+
+      // 決定的なドキュメントIDを使用していいね済みかチェック
+      const likeId = `${deckId}_${userId}`;
+      const likeRef = this.firestoreClient
+        .collection(this.DECK_LIKES_COLLECTION)
+        .doc(likeId);
+
+      const likeDoc = await transaction.get(likeRef);
+
+      // 既にいいね済みの場合は現在のカウントを返す
+      if (likeDoc.exists) {
+        return (deckDoc.data() as PublishedDeck).likeCount || 0;
+      }
+
+      const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
+      const newLikeCount = currentLikeCount + 1;
+
+      // いいねレコードを作成
+      transaction.set(likeRef, {
+        deckId,
+        userId,
+        createdAt: now,
+      });
+
+      // デッキのいいね数を更新
+      transaction.update(deckRef, {
+        likeCount: newLikeCount,
+        updatedAt: now,
+      });
+
+      return newLikeCount;
+    });
+  }
+
+  /**
+   * いいねを削除
+   */
+  async removeLike(deckId: string, userId: string): Promise<number> {
+    const now = Timestamp.now();
+
+    // トランザクションでいいねを削除
+    return await this.firestoreClient.runTransaction(async (transaction) => {
+      const deckRef = this.firestoreClient
+        .collection(this.PUBLISHED_DECKS_COLLECTION)
+        .doc(deckId);
+
+      const deckDoc = await transaction.get(deckRef);
+
+      if (!deckDoc.exists) {
+        throw new NotFoundError('指定されたデッキが見つかりません');
+      }
+
+      // 決定的なドキュメントIDを使用していいね済みかチェック
+      const likeId = `${deckId}_${userId}`;
+      const likeRef = this.firestoreClient
+        .collection(this.DECK_LIKES_COLLECTION)
+        .doc(likeId);
+
+      const likeDoc = await transaction.get(likeRef);
+
+      // いいねしていない場合は現在のカウントを返す
+      if (!likeDoc.exists) {
+        return (deckDoc.data() as PublishedDeck).likeCount || 0;
+      }
+
+      const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
+      const newLikeCount = Math.max(currentLikeCount - 1, 0);
+
+      // いいねレコードを削除
+      transaction.delete(likeRef);
+
+      // デッキのいいね数を更新
+      transaction.update(deckRef, {
+        likeCount: newLikeCount,
+        updatedAt: now,
+      });
+
+      return newLikeCount;
+    });
+  }
+
+  /**
+   * いいねしているか確認
+   */
+  async hasLiked(deckId: string, userId: string): Promise<boolean> {
+    const likeId = `${deckId}_${userId}`;
+    const likeRef = this.firestoreClient
+      .collection(this.DECK_LIKES_COLLECTION)
+      .doc(likeId);
+
+    const likeDoc = await likeRef.get();
+
+    return likeDoc.exists;
+  }
+
+  /**
+   * 閲覧数をカウント
+   */
+  async incrementViewCount(deckId: string, userId: string): Promise<number> {
+    // 既に閲覧済みかチェック
+    const viewsSnapshot = await this.firestoreClient
+      .collection(this.DECK_VIEWS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .where('userId', '==', userId)
+      .limit(1)
+      .get();
+
+    if (!viewsSnapshot.empty) {
+      // 既に閲覧済みの場合は現在のカウントを返す
+      const deck = await this.findPublishedDeckById(deckId);
+      return deck?.viewCount || 0;
+    }
+
+    const now = Timestamp.now();
+
+    // トランザクションで閲覧数を増やす
+    return await this.firestoreClient.runTransaction(async (transaction) => {
+      const deckRef = this.firestoreClient
+        .collection(this.PUBLISHED_DECKS_COLLECTION)
+        .doc(deckId);
+
+      const deckDoc = await transaction.get(deckRef);
+
+      if (!deckDoc.exists) {
+        throw new NotFoundError('指定されたデッキが見つかりません');
+      }
+
+      const currentViewCount = (deckDoc.data() as PublishedDeck).viewCount || 0;
+      const newViewCount = currentViewCount + 1;
+
+      // 閲覧レコードを作成
+      const viewRef = this.firestoreClient
+        .collection(this.DECK_VIEWS_COLLECTION)
+        .doc();
+
+      transaction.set(viewRef, {
+        deckId,
+        userId,
+        createdAt: now,
+      });
+
+      // デッキの閲覧数を更新
+      transaction.update(deckRef, {
+        viewCount: newViewCount,
+        updatedAt: now,
+      });
+
+      return newViewCount;
+    });
+  }
+
+  /**
+   * コメントを追加
+   */
+  async addComment(
+    deckId: string,
+    userId: string,
+    userName: string,
+    text: string
+  ): Promise<DeckComment> {
+    const now = Timestamp.now();
+
+    const commentRef = this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .doc();
+
+    const comment: DeckComment = {
+      id: commentRef.id,
+      deckId,
+      userId,
+      userName,
+      text,
+      createdAt: now,
+    };
+
+    await commentRef.set(comment);
+
+    return comment;
+  }
+
+  /**
+   * コメント一覧を取得
+   */
+  async findCommentsByDeckId(deckId: string): Promise<DeckComment[]> {
+    const snapshot = await this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snapshot.docs.map(
+      (doc) =>
+        ({
+          ...doc.data(),
+          id: doc.id,
+        }) as DeckComment
+    );
+  }
+
+  /**
+   * デッキを通報
+   */
+  async reportDeck(
+    deckId: string,
+    userId: string,
+    reason: string,
+    details?: string
+  ): Promise<DeckReport> {
+    const now = Timestamp.now();
+
+    const reportRef = this.firestoreClient
+      .collection(this.DECK_REPORTS_COLLECTION)
+      .doc();
+
+    const report: DeckReport = {
+      id: reportRef.id,
+      deckId,
+      reportedBy: userId,
+      reason: reason as DeckReport['reason'],
+      details,
+      createdAt: now,
+    };
+
+    await reportRef.set(report);
+
+    return report;
   }
 }

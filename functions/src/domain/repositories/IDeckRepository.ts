@@ -1,40 +1,81 @@
-import type { Deck, DeckCreateInput, DeckUpdateInput } from '../entities/Deck';
+import type {
+  DeckComment,
+  DeckPublicationRequest,
+  DeckReport,
+  GetDecksParams,
+  PageInfo,
+  PublishedDeck,
+} from '../entities/Deck';
 
 export interface IDeckRepository {
   /**
-   * デッキ一覧を取得
+   * デッキを公開
    */
-  findAll(params?: {
-    limit?: number;
-    orderBy?: 'createdAt' | 'updatedAt' | 'viewCount';
-    order?: 'asc' | 'desc';
-    userId?: string;
-    songId?: string;
-    tag?: string;
-  }): Promise<{ decks: Deck[]; total: number }>;
+  publishDeck(
+    request: DeckPublicationRequest,
+    userId: string,
+    userName: string
+  ): Promise<PublishedDeck>;
 
   /**
-   * デッキIDでデッキを取得
+   * 公開デッキ一覧を取得（ページネーション付き）
    */
-  findById(deckId: string): Promise<Deck | null>;
+  findPublishedDecks(
+    params: GetDecksParams
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }>;
 
   /**
-   * デッキを作成
+   * 公開デッキを1件取得
    */
-  create(input: DeckCreateInput): Promise<Deck>;
+  findPublishedDeckById(id: string): Promise<PublishedDeck | null>;
 
   /**
-   * デッキを更新
+   * 公開デッキを削除
    */
-  update(deckId: string, input: DeckUpdateInput): Promise<Deck>;
+  deleteDeck(id: string, userId: string): Promise<void>;
 
   /**
-   * デッキを削除
+   * いいねを追加
    */
-  delete(deckId: string): Promise<void>;
+  addLike(deckId: string, userId: string): Promise<number>;
 
   /**
-   * 閲覧数を増加
+   * いいねを削除
    */
-  incrementViewCount(deckId: string): Promise<void>;
+  removeLike(deckId: string, userId: string): Promise<number>;
+
+  /**
+   * いいねしているか確認
+   */
+  hasLiked(deckId: string, userId: string): Promise<boolean>;
+
+  /**
+   * 閲覧数をカウント
+   */
+  incrementViewCount(deckId: string, userId: string): Promise<number>;
+
+  /**
+   * コメントを追加
+   */
+  addComment(
+    deckId: string,
+    userId: string,
+    userName: string,
+    text: string
+  ): Promise<DeckComment>;
+
+  /**
+   * コメント一覧を取得
+   */
+  findCommentsByDeckId(deckId: string): Promise<DeckComment[]>;
+
+  /**
+   * デッキを通報
+   */
+  reportDeck(
+    deckId: string,
+    userId: string,
+    reason: string,
+    details?: string
+  ): Promise<DeckReport>;
 }
