@@ -4,7 +4,6 @@ import * as functions from 'firebase-functions';
 
 import { initializeFirebase } from '@/config/firebase';
 import { errorHandler } from '@/presentation/middleware/errorHandler';
-import { createDeckRouter } from '@/presentation/routes/deckRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
 
 // Firebase初期化
@@ -20,12 +19,10 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 
 // ルーティング
-app.use('/', createDeckRouter());
 app.use('/', createUserRouter());
 
 // エラーハンドリング
 app.use(errorHandler);
 
 // Cloud Functions Export
-export const deckApi = functions.region('asia-northeast1').https.onRequest(app);
 export const userApi = functions.region('asia-northeast1').https.onRequest(app);
