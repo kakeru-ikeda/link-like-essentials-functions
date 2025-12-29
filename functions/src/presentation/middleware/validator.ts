@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const DeckSlotSchema = z.object({
-  slotId: z.number().int().min(0).max(17),
+  slotId: z.number().int().min(0).max(99),
   cardId: z.string().nullable(),
   limitBreak: z.number().int().min(1).max(14).optional(),
 });
@@ -11,7 +11,7 @@ export const DeckCreateSchema = z.object({
     id: z.string().uuid(),
     userId: z.string(),
     name: z.string().min(1).max(100),
-    slots: z.array(DeckSlotSchema).length(18),
+    slots: z.array(DeckSlotSchema).length(19),
     aceSlotId: z.number().int().min(0).max(17).nullable(),
     deckType: z.string().optional(),
     songId: z.string().optional(),
@@ -22,7 +22,7 @@ export const DeckCreateSchema = z.object({
 export const DeckUpdateSchema = z.object({
   deck: z.object({
     name: z.string().min(1).max(100).optional(),
-    slots: z.array(DeckSlotSchema).length(18).optional(),
+    slots: z.array(DeckSlotSchema).length(19).optional(),
     aceSlotId: z.number().int().min(0).max(17).nullable().optional(),
     deckType: z.string().optional(),
     songId: z.string().optional(),
@@ -83,7 +83,7 @@ const DeckSlotForCloudSchema = z.object({
 const DeckForCloudSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(255),
-  slots: z.array(DeckSlotForCloudSchema).length(18),
+  slots: z.array(DeckSlotForCloudSchema).length(19),
   aceSlotId: z.number().int().min(0).max(17).nullable(),
   deckType: z.string().optional(),
   songId: z.string().optional(),
