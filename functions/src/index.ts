@@ -4,25 +4,30 @@ import * as functions from 'firebase-functions';
 
 import { initializeFirebase } from '@/config/firebase';
 import { errorHandler } from '@/presentation/middleware/errorHandler';
+import { createDeckRouter } from '@/presentation/routes/deckRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
 
 // Firebase初期化
 initializeFirebase();
 
-// Express初期化
-const app = express();
+// Express初期化（userApi）
+const userApp = express();
+userApp.use(cors({ origin: true }));
+userApp.use(express.json());
+userApp.use('/', createUserRouter());
+userApp.use(errorHandler);
 
-// CORS設定
-app.use(cors({ origin: true }));
-
-// Body parser
-app.use(express.json());
-
-// ルーティング
-app.use('/', createUserRouter());
-
-// エラーハンドリング
-app.use(errorHandler);
+// Express初期化（deckApi）
+const deckApp = express();
+deckApp.use(cors({ origin: true }));
+deckApp.use(express.json());
+deckApp.use('/', createDeckRouter());
+deckApp.use(errorHandler);
 
 // Cloud Functions Export
-export const userApi = functions.region('asia-northeast1').https.onRequest(app);
+export const userApi = functions
+  .region('asia-northeast1')
+  .https.onRequest(userApp);
+export const deckApi = functions
+  .region('asia-northeast1')
+  .https.onRequest(deckApp);
