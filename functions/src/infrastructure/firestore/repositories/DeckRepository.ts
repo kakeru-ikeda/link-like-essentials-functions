@@ -248,14 +248,6 @@ export class DeckRepository implements IDeckRepository {
    * いいねを追加
    */
   async addLike(deckId: string, userId: string): Promise<number> {
-    // 既にいいね済みかチェック
-    const hasLiked = await this.hasLiked(deckId, userId);
-    if (hasLiked) {
-      // 既にいいね済みの場合は現在のカウントを返す
-      const deck = await this.findPublishedDeckById(deckId);
-      return deck?.likeCount || 0;
-    }
-
     const now = Timestamp.now();
 
     // トランザクションでいいねを追加
@@ -270,14 +262,23 @@ export class DeckRepository implements IDeckRepository {
         throw new NotFoundError('指定されたデッキが見つかりません');
       }
 
+      // 決定的なドキュメントIDを使用していいね済みかチェック
+      const likeId = `${deckId}_${userId}`;
+      const likeRef = this.firestoreClient
+        .collection(this.DECK_LIKES_COLLECTION)
+        .doc(likeId);
+
+      const likeDoc = await transaction.get(likeRef);
+
+      // 既にいいね済みの場合は現在のカウントを返す
+      if (likeDoc.exists) {
+        return (deckDoc.data() as PublishedDeck).likeCount || 0;
+      }
+
       const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
       const newLikeCount = currentLikeCount + 1;
 
       // いいねレコードを作成
-      const likeRef = this.firestoreClient
-        .collection(this.DECK_LIKES_COLLECTION)
-        .doc();
-
       transaction.set(likeRef, {
         deckId,
         userId,
@@ -298,19 +299,6 @@ export class DeckRepository implements IDeckRepository {
    * いいねを削除
    */
   async removeLike(deckId: string, userId: string): Promise<number> {
-    // いいね済みかチェック
-    const likesSnapshot = await this.firestoreClient
-      .collection(this.DECK_LIKES_COLLECTION)
-      .where('deckId', '==', deckId)
-      .where('userId', '==', userId)
-      .get();
-
-    if (likesSnapshot.empty) {
-      // いいねしていない場合は現在のカウントを返す
-      const deck = await this.findPublishedDeckById(deckId);
-      return deck?.likeCount || 0;
-    }
-
     const now = Timestamp.now();
 
     // トランザクションでいいねを削除
@@ -325,13 +313,24 @@ export class DeckRepository implements IDeckRepository {
         throw new NotFoundError('指定されたデッキが見つかりません');
       }
 
+      // 決定的なドキュメントIDを使用していいね済みかチェック
+      const likeId = `${deckId}_${userId}`;
+      const likeRef = this.firestoreClient
+        .collection(this.DECK_LIKES_COLLECTION)
+        .doc(likeId);
+
+      const likeDoc = await transaction.get(likeRef);
+
+      // いいねしていない場合は現在のカウントを返す
+      if (!likeDoc.exists) {
+        return (deckDoc.data() as PublishedDeck).likeCount || 0;
+      }
+
       const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
       const newLikeCount = Math.max(currentLikeCount - 1, 0);
 
       // いいねレコードを削除
-      likesSnapshot.docs.forEach((doc) => {
-        transaction.delete(doc.ref);
-      });
+      transaction.delete(likeRef);
 
       // デッキのいいね数を更新
       transaction.update(deckRef, {
@@ -347,14 +346,14 @@ export class DeckRepository implements IDeckRepository {
    * いいねしているか確認
    */
   async hasLiked(deckId: string, userId: string): Promise<boolean> {
-    const snapshot = await this.firestoreClient
+    const likeId = `${deckId}_${userId}`;
+    const likeRef = this.firestoreClient
       .collection(this.DECK_LIKES_COLLECTION)
-      .where('deckId', '==', deckId)
-      .where('userId', '==', userId)
-      .limit(1)
-      .get();
+      .doc(likeId);
 
-    return !snapshot.empty;
+    const likeDoc = await likeRef.get();
+
+    return likeDoc.exists;
   }
 
   /**
