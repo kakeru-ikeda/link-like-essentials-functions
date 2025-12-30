@@ -15,6 +15,7 @@ import {
 } from '@/domain/errors/AppError';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import { FirestoreClient } from '@/infrastructure/firestore/FirestoreClient';
+import { sanitizeForFirestore } from '@/infrastructure/firestore/firestoreUtils';
 import { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
 
 export class DeckRepository implements IDeckRepository {
@@ -76,7 +77,8 @@ export class DeckRepository implements IDeckRepository {
       .collection(this.PUBLISHED_DECKS_COLLECTION)
       .doc(request.id);
 
-    await docRef.set(publishedDeckData);
+    // undefined を null に変換してから保存
+    await docRef.set(sanitizeForFirestore(publishedDeckData));
 
     return publishedDeckData;
   }
@@ -484,7 +486,8 @@ export class DeckRepository implements IDeckRepository {
       createdAt: now,
     };
 
-    await reportRef.set(report);
+    // undefined を null に変換してから保存
+    await reportRef.set(sanitizeForFirestore(report));
 
     return report;
   }

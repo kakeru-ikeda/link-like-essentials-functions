@@ -8,6 +8,7 @@ import type {
 import { NotFoundError } from '@/domain/errors/AppError';
 import type { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { FirestoreClient } from '@/infrastructure/firestore/FirestoreClient';
+import { sanitizeForFirestore } from '@/infrastructure/firestore/firestoreUtils';
 
 export class UserRepository implements IUserRepository {
   private readonly COLLECTION_NAME = 'users';
@@ -38,8 +39,8 @@ export class UserRepository implements IUserRepository {
 
     const userData = {
       displayName: input.displayName,
-      bio: input.bio ?? null,
-      avatarUrl: null,
+      bio: input.bio,
+      avatarUrl: input.avatarUrl,
       createdAt: now,
       updatedAt: now,
     };
@@ -48,7 +49,8 @@ export class UserRepository implements IUserRepository {
       .collection(this.COLLECTION_NAME)
       .doc(input.uid);
 
-    await docRef.set(userData);
+    // undefined を null に変換してから保存
+    await docRef.set(sanitizeForFirestore(userData));
 
     return {
       uid: input.uid,
@@ -71,7 +73,8 @@ export class UserRepository implements IUserRepository {
       updatedAt: Timestamp.now(),
     };
 
-    await docRef.set(updateData, { merge: true });
+    // undefined を null に変換してから保存
+    await docRef.set(sanitizeForFirestore(updateData), { merge: true });
 
     const updatedDoc = await docRef.get();
     return {
