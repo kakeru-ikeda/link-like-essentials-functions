@@ -19,6 +19,7 @@ interface PublishedDeckResponse {
   comment?: string;
   hashtags: string[];
   imageUrls?: string[];
+  thumbnail?: string;
   viewCount: number;
   likeCount: number;
   publishedAt: string;
@@ -44,6 +45,7 @@ const toPublishedDeckResponse = (
   comment: deck.comment,
   hashtags: deck.hashtags,
   imageUrls: deck.imageUrls,
+  thumbnail: deck.thumbnail,
   viewCount: deck.viewCount,
   likeCount: deck.likeCount,
   publishedAt: deck.publishedAt.toDate().toISOString(),

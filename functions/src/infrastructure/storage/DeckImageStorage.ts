@@ -6,6 +6,7 @@ import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 export class DeckImageStorage {
   private storageUtil: StorageUtility;
   private readonly BUCKET_PATH = 'deck_images';
+  private readonly THUMBNAIL_PATH = 'deck_thumbnails';
   private readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private readonly MAX_IMAGES = 3;
   private readonly ALLOWED_MIME_TYPES = [
@@ -82,6 +83,40 @@ export class DeckImageStorage {
   }
 
   /**
+   * tmpディレクトリのサムネイルをサムネイル用ディレクトリに移動
+   * @param tmpUrl tmpディレクトリのURL
+   * @param deckId デッキの公開ID
+   * @returns 移動後の公開URL
+   */
+  async moveThumbnailFromTmp(tmpUrl: string, deckId: string): Promise<string> {
+    // メタデータ取得して拡張子を決定
+    const tmpFilePath = this.storageUtil.extractFilePathFromUrl(tmpUrl);
+    const metadata = await this.storageUtil.getFileMetadata(tmpFilePath);
+    const mimeType = metadata.contentType;
+
+    if (!mimeType || !this.ALLOWED_MIME_TYPES.includes(mimeType)) {
+      throw new ValidationError('許可されていないファイル形式です');
+    }
+
+    const ext = mimeType.split('/')[1];
+    const filename = `${uuidv4()}.${ext}`;
+    const destFilePath = `${this.THUMBNAIL_PATH}/${deckId}/${filename}`;
+
+    try {
+      return await this.storageUtil.moveFromTmp(
+        tmpUrl,
+        destFilePath,
+        this.ALLOWED_MIME_TYPES
+      );
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new Error('サムネイルの移動に失敗しました');
+    }
+  }
+
+  /**
    * デッキ画像をアップロード（Buffer経由）
    */
   async uploadDeckImage(
@@ -129,5 +164,12 @@ export class DeckImageStorage {
     await Promise.all(
       imageUrls.map((url) => this.storageUtil.deleteFileByUrl(url))
     );
+  }
+
+  /**
+   * サムネイルを削除
+   */
+  async deleteThumbnail(thumbnailUrl: string): Promise<void> {
+    await this.storageUtil.deleteFileByUrl(thumbnailUrl);
   }
 }

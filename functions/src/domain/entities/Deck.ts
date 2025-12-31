@@ -39,6 +39,7 @@ export interface PublishedDeck {
   comment?: string;
   hashtags: string[];
   imageUrls?: string[];
+  thumbnail?: string;
   viewCount: number;
   likeCount: number;
   publishedAt: Timestamp;
@@ -51,7 +52,7 @@ export interface PublishedDeck {
  */
 export type DeckPublicationRequest = Pick<
   PublishedDeck,
-  'id' | 'deck' | 'comment' | 'hashtags' | 'imageUrls'
+  'id' | 'deck' | 'comment' | 'hashtags' | 'imageUrls' | 'thumbnail'
 >;
 
 /**
@@ -101,5 +102,4 @@ export interface GetDecksParams {
   userId?: string;
   songId?: string;
   tag?: string;
-  keyword?: string;
 }

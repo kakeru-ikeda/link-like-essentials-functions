@@ -1,21 +1,24 @@
 import { z } from 'zod';
 
+const createTmpStorageUrlSchema = (label: string): z.ZodType<string> =>
+  z
+    .string()
+    .url()
+    .refine((url) => url.includes('/tmp%2F') || url.includes('/tmp/'), {
+      message: `${label}は/tmpディレクトリのStorage URLである必要があります`,
+    })
+    .refine(
+      (url) =>
+        /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/.+/.test(
+          url
+        ),
+      {
+        message: '無効なStorage URLです',
+      }
+    );
+
 // User関連のバリデーションスキーマ
-const tmpAvatarUrlSchema = z
-  .string()
-  .url()
-  .refine((url) => url.includes('/tmp%2F') || url.includes('/tmp/'), {
-    message: 'avatarUrlは/tmpディレクトリのStorage URLである必要があります',
-  })
-  .refine(
-    (url) =>
-      /^https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/.+/.test(
-        url
-      ),
-    {
-      message: '無効なStorage URLです',
-    }
-  );
+const tmpAvatarUrlSchema = createTmpStorageUrlSchema('avatarUrl');
 
 export const UserCreateSchema = z.object({
   llid: z.string().length(9).optional(),
@@ -54,13 +57,17 @@ const DeckForCloudSchema = z.object({
   memo: z.string().optional(),
 });
 
+// tmp 配下のデッキ画像/サムネイル URL 用スキーマ
+const tmpDeckAssetUrlSchema = createTmpStorageUrlSchema('画像URL');
+
 // デッキ公開リクエストスキーマ
 export const DeckPublishSchema = z.object({
   id: z.string().length(21),
   deck: DeckForCloudSchema,
   comment: z.string().max(1000).optional(),
   hashtags: z.array(z.string()),
-  imageUrls: z.array(z.string().url()).max(3).optional(),
+  imageUrls: z.array(tmpDeckAssetUrlSchema).max(3).optional(),
+  thumbnail: tmpDeckAssetUrlSchema.optional(),
 });
 
 // コメント追加スキーマ
@@ -83,5 +90,4 @@ export const GetDecksQuerySchema = z.object({
   userId: z.string().optional(),
   songId: z.string().optional(),
   tag: z.string().optional(),
-  keyword: z.string().optional(),
 });
