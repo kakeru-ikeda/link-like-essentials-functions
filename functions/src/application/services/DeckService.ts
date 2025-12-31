@@ -49,11 +49,34 @@ export class DeckService {
 
     // 画像URLをtmpから永続ディレクトリに移動
     let movedImageUrls: string[] | undefined;
-    if (request.imageUrls && request.imageUrls.length > 0) {
-      movedImageUrls = await this.deckImageStorage.moveFromTmpToDeckImages(
-        request.imageUrls,
-        request.id
-      );
+    let movedThumbnail: string | undefined;
+    try {
+      if (request.imageUrls && request.imageUrls.length > 0) {
+        movedImageUrls = await this.deckImageStorage.moveFromTmpToDeckImages(
+          request.imageUrls,
+          request.id
+        );
+      }
+
+      if (request.thumbnail) {
+        movedThumbnail = await this.deckImageStorage.moveThumbnailFromTmp(
+          request.thumbnail,
+          request.id
+        );
+      }
+    } catch (error) {
+      // どちらかの移動に失敗したらロールバック
+      if (movedThumbnail) {
+        await this.deckImageStorage
+          .deleteThumbnail(movedThumbnail)
+          .catch(console.error);
+      }
+      if (movedImageUrls && movedImageUrls.length > 0) {
+        await this.deckImageStorage
+          .deleteDeckImages(movedImageUrls)
+          .catch(console.error);
+      }
+      throw error;
     }
 
     // 公開デッキデータを作成
@@ -65,6 +88,7 @@ export class DeckService {
       comment: request.comment,
       hashtags: request.hashtags || [],
       imageUrls: movedImageUrls,
+      thumbnail: movedThumbnail,
       viewCount: 0,
       likeCount: 0,
       publishedAt: now,
@@ -114,6 +138,12 @@ export class DeckService {
     // デッキ画像を削除
     if (deck.imageUrls && deck.imageUrls.length > 0) {
       await this.deckImageStorage.deleteAllDeckImages(id).catch(console.error);
+    }
+
+    if (deck.thumbnail) {
+      await this.deckImageStorage
+        .deleteThumbnail(deck.thumbnail)
+        .catch(console.error);
     }
 
     // デッキを削除
