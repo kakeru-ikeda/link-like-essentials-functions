@@ -2,21 +2,14 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import type {
   DeckComment,
-  DeckPublicationRequest,
   DeckReport,
   GetDecksParams,
   PageInfo,
   PublishedDeck,
 } from '@/domain/entities/Deck';
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-} from '@/domain/errors/AppError';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import { FirestoreClient } from '@/infrastructure/firestore/FirestoreClient';
 import { sanitizeForFirestore } from '@/infrastructure/firestore/firestoreUtils';
-import { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
 
 export class DeckRepository implements IDeckRepository {
   private readonly PUBLISHED_DECKS_COLLECTION = 'published_decks';
@@ -26,61 +19,22 @@ export class DeckRepository implements IDeckRepository {
   private readonly DECK_REPORTS_COLLECTION = 'deck_reports';
 
   private firestoreClient: FirestoreClient;
-  private deckImageStorage: DeckImageStorage;
 
   constructor() {
     this.firestoreClient = new FirestoreClient();
-    this.deckImageStorage = new DeckImageStorage();
   }
 
   /**
-   * デッキを公開
+   * デッキを保存（データアクセスのみ）
    */
-  async publishDeck(
-    request: DeckPublicationRequest,
-    userId: string,
-    userName: string
-  ): Promise<PublishedDeck> {
-    const now = Timestamp.now();
-
-    // 公開IDの重複チェック
-    const existingDeck = await this.findPublishedDeckById(request.id);
-    if (existingDeck) {
-      throw new ConflictError('指定された公開IDは既に使用されています');
-    }
-
-    // 画像URLをtmpから永続ディレクトリに移動
-    let movedImageUrls: string[] | undefined;
-    if (request.imageUrls && request.imageUrls.length > 0) {
-      movedImageUrls = await this.deckImageStorage.moveFromTmpToDeckImages(
-        request.imageUrls,
-        request.id
-      );
-    }
-
-    const publishedDeckData: PublishedDeck = {
-      id: request.id,
-      deck: request.deck,
-      userId,
-      userName,
-      comment: request.comment,
-      hashtags: request.hashtags || [],
-      imageUrls: movedImageUrls,
-      viewCount: 0,
-      likeCount: 0,
-      publishedAt: now, // サーバー生成のタイムスタンプ
-      createdAt: now, // サーバー生成のタイムスタンプ（PublishedDeckレベル）
-      updatedAt: now, // サーバー生成のタイムスタンプ（PublishedDeckレベル）
-    };
-
+  async saveDeck(deck: PublishedDeck): Promise<PublishedDeck> {
     const docRef = this.firestoreClient
       .collection(this.PUBLISHED_DECKS_COLLECTION)
-      .doc(request.id);
+      .doc(deck.id);
 
-    // undefined を null に変換してから保存
-    await docRef.set(sanitizeForFirestore(publishedDeckData));
+    await docRef.set(sanitizeForFirestore(deck));
 
-    return publishedDeckData;
+    return deck;
   }
 
   /**
@@ -179,38 +133,31 @@ export class DeckRepository implements IDeckRepository {
   }
 
   /**
+   * 公開デッキを更新
+   */
+  async updateDeck(id: string, data: Partial<PublishedDeck>): Promise<void> {
+    const docRef = this.firestoreClient
+      .collection(this.PUBLISHED_DECKS_COLLECTION)
+      .doc(id);
+
+    await docRef.update(sanitizeForFirestore(data));
+  }
+
+  /**
    * 公開デッキを削除
    */
-  async deleteDeck(id: string, userId: string): Promise<void> {
-    const deck = await this.findPublishedDeckById(id);
-
-    if (!deck) {
-      throw new NotFoundError('指定されたデッキが見つかりません');
-    }
-
-    if (deck.userId !== userId) {
-      throw new ForbiddenError('このデッキを削除する権限がありません');
-    }
-
-    // デッキ画像を削除
-    if (deck.imageUrls && deck.imageUrls.length > 0) {
-      await this.deckImageStorage.deleteAllDeckImages(id).catch(console.error);
-    }
-
+  async deleteDeck(id: string): Promise<void> {
     const docRef = this.firestoreClient
       .collection(this.PUBLISHED_DECKS_COLLECTION)
       .doc(id);
 
     await docRef.delete();
-
-    // 関連データも削除（いいね、閲覧、コメント）
-    await this.deleteDeckRelatedData(id);
   }
 
   /**
-   * 関連データを削除
+   * デッキに関連する全データを削除（いいね、閲覧、コメント）
    */
-  private async deleteDeckRelatedData(deckId: string): Promise<void> {
+  async deleteDeckRelatedData(deckId: string): Promise<void> {
     const batch = this.firestoreClient.batch();
 
     // いいねを削除
@@ -247,101 +194,32 @@ export class DeckRepository implements IDeckRepository {
   }
 
   /**
-   * いいねを追加
+   * いいねレコードを作成
    */
-  async addLike(deckId: string, userId: string): Promise<number> {
+  async createLike(deckId: string, userId: string): Promise<void> {
     const now = Timestamp.now();
+    const likeId = `${deckId}_${userId}`;
+    const likeRef = this.firestoreClient
+      .collection(this.DECK_LIKES_COLLECTION)
+      .doc(likeId);
 
-    // トランザクションでいいねを追加
-    return await this.firestoreClient.runTransaction(async (transaction) => {
-      const deckRef = this.firestoreClient
-        .collection(this.PUBLISHED_DECKS_COLLECTION)
-        .doc(deckId);
-
-      const deckDoc = await transaction.get(deckRef);
-
-      if (!deckDoc.exists) {
-        throw new NotFoundError('指定されたデッキが見つかりません');
-      }
-
-      // 決定的なドキュメントIDを使用していいね済みかチェック
-      const likeId = `${deckId}_${userId}`;
-      const likeRef = this.firestoreClient
-        .collection(this.DECK_LIKES_COLLECTION)
-        .doc(likeId);
-
-      const likeDoc = await transaction.get(likeRef);
-
-      // 既にいいね済みの場合は現在のカウントを返す
-      if (likeDoc.exists) {
-        return (deckDoc.data() as PublishedDeck).likeCount || 0;
-      }
-
-      const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
-      const newLikeCount = currentLikeCount + 1;
-
-      // いいねレコードを作成
-      transaction.set(likeRef, {
-        deckId,
-        userId,
-        createdAt: now,
-      });
-
-      // デッキのいいね数を更新
-      transaction.update(deckRef, {
-        likeCount: newLikeCount,
-        updatedAt: now,
-      });
-
-      return newLikeCount;
+    await likeRef.set({
+      deckId,
+      userId,
+      createdAt: now,
     });
   }
 
   /**
-   * いいねを削除
+   * いいねレコードを削除
    */
-  async removeLike(deckId: string, userId: string): Promise<number> {
-    const now = Timestamp.now();
+  async deleteLike(deckId: string, userId: string): Promise<void> {
+    const likeId = `${deckId}_${userId}`;
+    const likeRef = this.firestoreClient
+      .collection(this.DECK_LIKES_COLLECTION)
+      .doc(likeId);
 
-    // トランザクションでいいねを削除
-    return await this.firestoreClient.runTransaction(async (transaction) => {
-      const deckRef = this.firestoreClient
-        .collection(this.PUBLISHED_DECKS_COLLECTION)
-        .doc(deckId);
-
-      const deckDoc = await transaction.get(deckRef);
-
-      if (!deckDoc.exists) {
-        throw new NotFoundError('指定されたデッキが見つかりません');
-      }
-
-      // 決定的なドキュメントIDを使用していいね済みかチェック
-      const likeId = `${deckId}_${userId}`;
-      const likeRef = this.firestoreClient
-        .collection(this.DECK_LIKES_COLLECTION)
-        .doc(likeId);
-
-      const likeDoc = await transaction.get(likeRef);
-
-      // いいねしていない場合は現在のカウントを返す
-      if (!likeDoc.exists) {
-        return (deckDoc.data() as PublishedDeck).likeCount || 0;
-      }
-
-      const currentLikeCount = (deckDoc.data() as PublishedDeck).likeCount || 0;
-      const newLikeCount = Math.max(currentLikeCount - 1, 0);
-
-      // いいねレコードを削除
-      transaction.delete(likeRef);
-
-      // デッキのいいね数を更新
-      transaction.update(deckRef, {
-        likeCount: newLikeCount,
-        updatedAt: now,
-      });
-
-      return newLikeCount;
-    });
+    await likeRef.delete();
   }
 
   /**
@@ -359,10 +237,25 @@ export class DeckRepository implements IDeckRepository {
   }
 
   /**
-   * 閲覧数をカウント
+   * 閲覧レコードを作成
    */
-  async incrementViewCount(deckId: string, userId: string): Promise<number> {
-    // 既に閲覧済みかチェック
+  async createView(deckId: string, userId: string): Promise<void> {
+    const now = Timestamp.now();
+    const viewRef = this.firestoreClient
+      .collection(this.DECK_VIEWS_COLLECTION)
+      .doc();
+
+    await viewRef.set({
+      deckId,
+      userId,
+      createdAt: now,
+    });
+  }
+
+  /**
+   * 閲覧履歴が存在するか確認
+   */
+  async hasViewed(deckId: string, userId: string): Promise<boolean> {
     const viewsSnapshot = await this.firestoreClient
       .collection(this.DECK_VIEWS_COLLECTION)
       .where('deckId', '==', deckId)
@@ -370,77 +263,25 @@ export class DeckRepository implements IDeckRepository {
       .limit(1)
       .get();
 
-    if (!viewsSnapshot.empty) {
-      // 既に閲覧済みの場合は現在のカウントを返す
-      const deck = await this.findPublishedDeckById(deckId);
-      return deck?.viewCount || 0;
-    }
-
-    const now = Timestamp.now();
-
-    // トランザクションで閲覧数を増やす
-    return await this.firestoreClient.runTransaction(async (transaction) => {
-      const deckRef = this.firestoreClient
-        .collection(this.PUBLISHED_DECKS_COLLECTION)
-        .doc(deckId);
-
-      const deckDoc = await transaction.get(deckRef);
-
-      if (!deckDoc.exists) {
-        throw new NotFoundError('指定されたデッキが見つかりません');
-      }
-
-      const currentViewCount = (deckDoc.data() as PublishedDeck).viewCount || 0;
-      const newViewCount = currentViewCount + 1;
-
-      // 閲覧レコードを作成
-      const viewRef = this.firestoreClient
-        .collection(this.DECK_VIEWS_COLLECTION)
-        .doc();
-
-      transaction.set(viewRef, {
-        deckId,
-        userId,
-        createdAt: now,
-      });
-
-      // デッキの閲覧数を更新
-      transaction.update(deckRef, {
-        viewCount: newViewCount,
-        updatedAt: now,
-      });
-
-      return newViewCount;
-    });
+    return !viewsSnapshot.empty;
   }
 
   /**
-   * コメントを追加
+   * コメントを作成
    */
-  async addComment(
-    deckId: string,
-    userId: string,
-    userName: string,
-    text: string
-  ): Promise<DeckComment> {
-    const now = Timestamp.now();
-
+  async createComment(comment: Omit<DeckComment, 'id'>): Promise<DeckComment> {
     const commentRef = this.firestoreClient
       .collection(this.DECK_COMMENTS_COLLECTION)
       .doc();
 
-    const comment: DeckComment = {
+    const newComment: DeckComment = {
+      ...comment,
       id: commentRef.id,
-      deckId,
-      userId,
-      userName,
-      text,
-      createdAt: now,
     };
 
-    await commentRef.set(comment);
+    await commentRef.set(newComment);
 
-    return comment;
+    return newComment;
   }
 
   /**
@@ -463,32 +304,20 @@ export class DeckRepository implements IDeckRepository {
   }
 
   /**
-   * デッキを通報
+   * 通報レコードを作成
    */
-  async reportDeck(
-    deckId: string,
-    userId: string,
-    reason: string,
-    details?: string
-  ): Promise<DeckReport> {
-    const now = Timestamp.now();
-
+  async createReport(report: Omit<DeckReport, 'id'>): Promise<DeckReport> {
     const reportRef = this.firestoreClient
       .collection(this.DECK_REPORTS_COLLECTION)
       .doc();
 
-    const report: DeckReport = {
+    const newReport: DeckReport = {
+      ...report,
       id: reportRef.id,
-      deckId,
-      reportedBy: userId,
-      reason: reason as DeckReport['reason'],
-      details,
-      createdAt: now,
     };
 
-    // undefined を null に変換してから保存
-    await reportRef.set(sanitizeForFirestore(report));
+    await reportRef.set(sanitizeForFirestore(newReport));
 
-    return report;
+    return newReport;
   }
 }

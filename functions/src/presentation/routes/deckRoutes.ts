@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { DeckService } from '@/application/services/DeckService';
 import { DeckRepository } from '@/infrastructure/firestore/repositories/DeckRepository';
 import { UserRepository } from '@/infrastructure/firestore/repositories/UserRepository';
+import { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
 import { DeckController } from '@/presentation/controllers/DeckController';
 import { authenticate } from '@/presentation/middleware/authMiddleware';
 
@@ -12,7 +13,12 @@ export const createDeckRouter = (): Router => {
   // 依存性注入
   const deckRepository = new DeckRepository();
   const userRepository = new UserRepository();
-  const deckService = new DeckService(deckRepository, userRepository);
+  const deckImageStorage = new DeckImageStorage();
+  const deckService = new DeckService(
+    deckRepository,
+    userRepository,
+    deckImageStorage
+  );
   const deckController = new DeckController(deckService);
 
   // ルーティング定義

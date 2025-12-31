@@ -1,6 +1,5 @@
 import type {
   DeckComment,
-  DeckPublicationRequest,
   DeckReport,
   GetDecksParams,
   PageInfo,
@@ -8,14 +7,11 @@ import type {
 } from '../entities/Deck';
 
 export interface IDeckRepository {
+  // ========== Deck CRUD ==========
   /**
-   * デッキを公開
+   * デッキを保存（データアクセスのみ）
    */
-  publishDeck(
-    request: DeckPublicationRequest,
-    userId: string,
-    userName: string
-  ): Promise<PublishedDeck>;
+  saveDeck(deck: PublishedDeck): Promise<PublishedDeck>;
 
   /**
    * 公開デッキ一覧を取得（ページネーション付き）
@@ -30,52 +26,62 @@ export interface IDeckRepository {
   findPublishedDeckById(id: string): Promise<PublishedDeck | null>;
 
   /**
+   * 公開デッキを更新
+   */
+  updateDeck(id: string, data: Partial<PublishedDeck>): Promise<void>;
+
+  /**
    * 公開デッキを削除
    */
-  deleteDeck(id: string, userId: string): Promise<void>;
+  deleteDeck(id: string): Promise<void>;
+
+  // ========== Like CRUD ==========
+  /**
+   * いいねレコードを作成
+   */
+  createLike(deckId: string, userId: string): Promise<void>;
 
   /**
-   * いいねを追加
+   * いいねレコードを削除
    */
-  addLike(deckId: string, userId: string): Promise<number>;
-
-  /**
-   * いいねを削除
-   */
-  removeLike(deckId: string, userId: string): Promise<number>;
+  deleteLike(deckId: string, userId: string): Promise<void>;
 
   /**
    * いいねしているか確認
    */
   hasLiked(deckId: string, userId: string): Promise<boolean>;
 
+  // ========== View CRUD ==========
   /**
-   * 閲覧数をカウント
+   * 閲覧レコードを作成
    */
-  incrementViewCount(deckId: string, userId: string): Promise<number>;
+  createView(deckId: string, userId: string): Promise<void>;
 
   /**
-   * コメントを追加
+   * 閲覧履歴が存在するか確認
    */
-  addComment(
-    deckId: string,
-    userId: string,
-    userName: string,
-    text: string
-  ): Promise<DeckComment>;
+  hasViewed(deckId: string, userId: string): Promise<boolean>;
+
+  // ========== Comment CRUD ==========
+  /**
+   * コメントを作成
+   */
+  createComment(comment: Omit<DeckComment, 'id'>): Promise<DeckComment>;
 
   /**
    * コメント一覧を取得
    */
   findCommentsByDeckId(deckId: string): Promise<DeckComment[]>;
 
+  // ========== Report CRUD ==========
   /**
-   * デッキを通報
+   * 通報レコードを作成
    */
-  reportDeck(
-    deckId: string,
-    userId: string,
-    reason: string,
-    details?: string
-  ): Promise<DeckReport>;
+  createReport(report: Omit<DeckReport, 'id'>): Promise<DeckReport>;
+
+  // ========== Batch Operations ==========
+  /**
+   * デッキに関連する全データを削除（いいね、閲覧、コメント）
+   */
+  deleteDeckRelatedData(deckId: string): Promise<void>;
 }
