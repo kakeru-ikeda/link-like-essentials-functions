@@ -102,5 +102,4 @@ export interface GetDecksParams {
   userId?: string;
   songId?: string;
   tag?: string;
-  keyword?: string;
 }

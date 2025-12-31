@@ -90,5 +90,4 @@ export const GetDecksQuerySchema = z.object({
   userId: z.string().optional(),
   songId: z.string().optional(),
   tag: z.string().optional(),
-  keyword: z.string().optional(),
 });

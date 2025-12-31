@@ -67,37 +67,22 @@ export class DeckRepository implements IDeckRepository {
     // ソート
     query = query.orderBy(orderBy, order);
 
-    // 総件数を取得（キーワード検索がない場合）
-    let totalCount = 0;
-    if (!params.keyword) {
-      const countSnapshot = await query.count().get();
-      totalCount = countSnapshot.data().count;
-    }
+    // 総件数を取得
+    const countSnapshot = await query.count().get();
+    const totalCount = countSnapshot.data().count;
 
     // ページネーション
     const offset = (page - 1) * perPage;
     query = query.offset(offset).limit(perPage);
 
     const snapshot = await query.get();
-    let decks = snapshot.docs.map(
+    const decks = snapshot.docs.map(
       (doc) =>
         ({
           ...doc.data(),
           id: doc.id,
         }) as PublishedDeck
     );
-
-    // キーワード検索（クライアント側フィルタリング）
-    if (params.keyword) {
-      const keyword = params.keyword.toLowerCase();
-      decks = decks.filter(
-        (deck) =>
-          deck.deck.name.toLowerCase().includes(keyword) ||
-          deck.comment?.toLowerCase().includes(keyword) ||
-          deck.hashtags.some((tag) => tag.toLowerCase().includes(keyword))
-      );
-      totalCount = decks.length;
-    }
 
     // ページネーション情報
     const totalPages = Math.ceil(totalCount / perPage);
