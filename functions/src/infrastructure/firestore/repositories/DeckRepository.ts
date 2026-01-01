@@ -41,7 +41,8 @@ export class DeckRepository implements IDeckRepository {
    * 公開デッキ一覧を取得（ページネーション付き）
    */
   async findPublishedDecks(
-    params: GetDecksParams
+    params: GetDecksParams,
+    currentUserId?: string
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
     const page = params.page || 1;
     const perPage = Math.min(params.perPage || 20, 100);
@@ -84,6 +85,8 @@ export class DeckRepository implements IDeckRepository {
         }) as PublishedDeck
     );
 
+    const decksWithLikeFlag = await this.attachLikedFlag(decks, currentUserId);
+
     // ページネーション情報
     const totalPages = Math.ceil(totalCount / perPage);
     const pageInfo: PageInfo = {
@@ -95,13 +98,16 @@ export class DeckRepository implements IDeckRepository {
       hasPreviousPage: page > 1,
     };
 
-    return { decks, pageInfo };
+    return { decks: decksWithLikeFlag, pageInfo };
   }
 
   /**
    * 公開デッキを1件取得
    */
-  async findPublishedDeckById(id: string): Promise<PublishedDeck | null> {
+  async findPublishedDeckById(
+    id: string,
+    currentUserId?: string
+  ): Promise<PublishedDeck | null> {
     const docRef = this.firestoreClient
       .collection(this.PUBLISHED_DECKS_COLLECTION)
       .doc(id);
@@ -111,9 +117,14 @@ export class DeckRepository implements IDeckRepository {
       return null;
     }
 
+    const likedByCurrentUser = currentUserId
+      ? await this.hasLiked(id, currentUserId)
+      : undefined;
+
     return {
       ...(doc.data() as PublishedDeck),
       id: doc.id,
+      likedByCurrentUser,
     };
   }
 
@@ -304,5 +315,40 @@ export class DeckRepository implements IDeckRepository {
     await reportRef.set(sanitizeForFirestore(newReport));
 
     return newReport;
+  }
+
+  private async attachLikedFlag(
+    decks: PublishedDeck[],
+    currentUserId?: string
+  ): Promise<PublishedDeck[]> {
+    if (!currentUserId || decks.length === 0) {
+      return decks;
+    }
+
+    const deckIds = decks.map((deck) => deck.id);
+    const likedDeckIds = new Set<string>();
+
+    // Firestoreのin句は最大10件なのでチャンクして問い合わせる
+    const chunkSize = 10;
+    for (let i = 0; i < deckIds.length; i += chunkSize) {
+      const chunk = deckIds.slice(i, i + chunkSize);
+      const snapshot = await this.firestoreClient
+        .collection(this.DECK_LIKES_COLLECTION)
+        .where('userId', '==', currentUserId)
+        .where('deckId', 'in', chunk)
+        .get();
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data() as { deckId?: string };
+        if (data.deckId) {
+          likedDeckIds.add(data.deckId);
+        }
+      });
+    }
+
+    return decks.map((deck) => ({
+      ...deck,
+      likedByCurrentUser: likedDeckIds.has(deck.id),
+    }));
   }
 }
