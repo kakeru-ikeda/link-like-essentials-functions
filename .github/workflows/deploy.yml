@@ -63,6 +63,83 @@ jobs:
                }' \
                $DISCORD_WEBHOOK
 
+      deploy-firestore-indexes:
+        name: Deploy Firestore Indexes
+        runs-on: ubuntu-latest
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+            with:
+              ref: ${{ github.event.workflow_run.head_sha }}
+              fetch-depth: 2
+
+          - name: Detect firestore.indexes.json changes
+            id: detect-index-changes
+            run: |
+              set -euo pipefail
+              if git diff --name-only HEAD^ HEAD -- firestore.indexes.json | grep -q 'firestore.indexes.json'; then
+                echo "changed=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "changed=false" >> "$GITHUB_OUTPUT"
+              fi
+
+          - name: Deploy Firestore indexes
+            if: steps.detect-index-changes.outputs.changed == 'true'
+            uses: w9jds/firebase-action@master
+            with:
+              args: deploy --only firestore:indexes --force
+            env:
+              GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+              PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+
+          - name: Notify Discord - Index Success
+            if: steps.detect-index-changes.outputs.changed == 'true' && success()
+            env:
+              DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            run: |
+              curl -H "Content-Type: application/json" \
+                   -d '{
+                     "embeds": [{
+                       "title": "✅ Firestore Indexes デプロイ成功",
+                       "color": 3066993,
+                       "fields": [
+                         {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                         {"name": "ブランチ", "value": "'"${{ github.event.workflow_run.head_branch }}"'", "inline": true},
+                         {"name": "実行者", "value": "'"${{ github.event.workflow_run.actor.login }}"'", "inline": true},
+                         {"name": "コミット", "value": "'"$(git log -1 --pretty=%B | head -n 1)"'", "inline": false}
+                       ],
+                       "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                     }]
+                   }' \
+                   $DISCORD_WEBHOOK
+
+          - name: Skip deploy (no index changes)
+            if: steps.detect-index-changes.outputs.changed != 'true'
+            run: echo "firestore.indexes.json に変更がないため、デプロイをスキップします。"
+
+          - name: Notify Discord - Index Failure
+            if: steps.detect-index-changes.outputs.changed == 'true' && failure()
+            env:
+              DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            run: |
+              curl -H "Content-Type: application/json" \
+                   -d '{
+                     "embeds": [{
+                       "title": "❌ Firestore Indexes デプロイ失敗",
+                       "color": 15158332,
+                       "fields": [
+                         {"name": "リポジトリ", "value": "'"$GITHUB_REPOSITORY"'", "inline": true},
+                         {"name": "ブランチ", "value": "'"${{ github.event.workflow_run.head_branch }}"'", "inline": true},
+                         {"name": "実行者", "value": "'"${{ github.event.workflow_run.actor.login }}"'", "inline": true},
+                         {"name": "ワークフロー", "value": "[実行ログを確認]("'"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"'" )", "inline": false}
+                       ],
+                       "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'"
+                     }]
+                   }' \
+                   $DISCORD_WEBHOOK
+
       - name: Notify Discord - Failure
         if: failure()
         env:
