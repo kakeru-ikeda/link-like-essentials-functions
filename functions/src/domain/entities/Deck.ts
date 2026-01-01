@@ -42,6 +42,7 @@ export interface PublishedDeck {
   thumbnail?: string;
   viewCount: number;
   likeCount: number;
+  likedByCurrentUser?: boolean;
   publishedAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

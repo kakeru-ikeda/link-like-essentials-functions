@@ -22,6 +22,7 @@ interface PublishedDeckResponse {
   thumbnail?: string;
   viewCount: number;
   likeCount: number;
+  likedByCurrentUser?: boolean;
   publishedAt: string;
 }
 
@@ -48,6 +49,7 @@ const toPublishedDeckResponse = (
   thumbnail: deck.thumbnail,
   viewCount: deck.viewCount,
   likeCount: deck.likeCount,
+  likedByCurrentUser: deck.likedByCurrentUser ?? false,
   publishedAt: deck.publishedAt.toDate().toISOString(),
 });
 
@@ -72,8 +74,13 @@ export class DeckController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
       const params = GetDecksQuerySchema.parse(req.query);
-      const result = await this.deckService.getPublishedDecks(params);
+      const result = await this.deckService.getPublishedDecks(params, uid);
 
       res.status(200).json({
         publishedDecks: result.decks.map(toPublishedDeckResponse),
@@ -93,8 +100,13 @@ export class DeckController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
       const { id } = req.params;
-      const deck = await this.deckService.getPublishedDeckById(id);
+      const deck = await this.deckService.getPublishedDeckById(id, uid);
 
       res.status(200).json({
         publishedDeck: toPublishedDeckResponse(deck),

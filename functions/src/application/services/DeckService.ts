@@ -104,16 +104,23 @@ export class DeckService {
    * デッキ一覧を取得
    */
   async getPublishedDecks(
-    params: GetDecksParams
+    params: GetDecksParams,
+    currentUserId: string
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
-    return await this.deckRepository.findPublishedDecks(params);
+    return await this.deckRepository.findPublishedDecks(params, currentUserId);
   }
 
   /**
    * デッキ詳細を取得
    */
-  async getPublishedDeckById(id: string): Promise<PublishedDeck> {
-    const deck = await this.deckRepository.findPublishedDeckById(id);
+  async getPublishedDeckById(
+    id: string,
+    currentUserId: string
+  ): Promise<PublishedDeck> {
+    const deck = await this.deckRepository.findPublishedDeckById(
+      id,
+      currentUserId
+    );
     if (!deck) {
       throw new NotFoundError('指定されたデッキが見つかりません');
     }

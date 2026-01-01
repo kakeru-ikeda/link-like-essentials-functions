@@ -17,13 +17,17 @@ export interface IDeckRepository {
    * 公開デッキ一覧を取得（ページネーション付き）
    */
   findPublishedDecks(
-    params: GetDecksParams
+    params: GetDecksParams,
+    currentUserId?: string
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }>;
 
   /**
    * 公開デッキを1件取得
    */
-  findPublishedDeckById(id: string): Promise<PublishedDeck | null>;
+  findPublishedDeckById(
+    id: string,
+    currentUserId?: string
+  ): Promise<PublishedDeck | null>;
 
   /**
    * 公開デッキを更新
