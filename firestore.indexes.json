@@ -31,6 +31,189 @@
         { "fieldPath": "viewCount", "order": "DESCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "deck.songId", "order": "ASCENDING" },
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
     }
   ]
 }
