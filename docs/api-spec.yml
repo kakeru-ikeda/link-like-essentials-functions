@@ -1,0 +1,740 @@
+openapi: 3.0.3
+info:
+  title: Link Like Essentials API
+  version: 1.0.0
+  description: >-
+    User API と Deck API の実装から起こした OpenAPI 定義。ApiDog での取り込みを想定。
+servers:
+  - url: https://asia-northeast1-{projectId}.cloudfunctions.net/userApi
+    description: User API エンドポイント
+  - url: https://asia-northeast1-{projectId}.cloudfunctions.net/deckApi
+    description: Deck API エンドポイント
+security:
+  - bearerAuth: []
+paths:
+  /users/me:
+    get:
+      tags: [User]
+      summary: 自分のプロフィール取得
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                required: [user]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+    post:
+      tags: [User]
+      summary: プロフィール作成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequest"
+      responses:
+        "201":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                required: [user]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+    put:
+      tags: [User]
+      summary: プロフィール更新
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                required: [user]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+    delete:
+      tags: [User]
+      summary: ユーザー削除
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: 削除成功（レスポンスボディなし）
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /users/me/avatar:
+    delete:
+      tags: [User]
+      summary: アバター画像削除
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                required: [user]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/hashtags:
+    get:
+      tags: [Deck]
+      summary: 人気ハッシュタグ取得（直近集計）
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hashtags:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PopularHashtag"
+                  aggregatedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+                required: [hashtags, aggregatedAt]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks:
+    get:
+      tags: [Deck]
+      summary: デッキ一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: perPage
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: orderBy
+          schema:
+            type: string
+            enum: [publishedAt, viewCount, likeCount]
+          description: ソート対象。未指定時は publishedAt。
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - in: query
+          name: userId
+          schema:
+            type: string
+          description: 特定ユーザーの投稿でフィルタ
+        - in: query
+          name: songId
+          schema:
+            type: string
+        - in: query
+          name: tag
+          schema:
+            type: string
+          description: ハッシュタグ（完全一致）
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publishedDecks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublishedDeck"
+                  pageInfo:
+                    $ref: "#/components/schemas/PageInfo"
+                required: [publishedDecks, pageInfo]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}:
+    get:
+      tags: [Deck]
+      summary: デッキ詳細取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publishedDeck:
+                    $ref: "#/components/schemas/PublishedDeck"
+                required: [publishedDeck]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+    delete:
+      tags: [Deck]
+      summary: デッキ削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 削除成功（レスポンスボディなし）
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/publish:
+    post:
+      tags: [Deck]
+      summary: デッキ公開
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeckPublishRequest"
+      responses:
+        "201":
+          description: 公開成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publishedDeck:
+                    $ref: "#/components/schemas/PublishedDeck"
+                required: [publishedDeck]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/like:
+    post:
+      tags: [Deck]
+      summary: いいね追加
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likeCount:
+                    type: integer
+                    minimum: 0
+                required: [likeCount]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+    delete:
+      tags: [Deck]
+      summary: いいね削除
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  likeCount:
+                    type: integer
+                    minimum: 0
+                required: [likeCount]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/view:
+    post:
+      tags: [Deck]
+      summary: 閲覧数カウント（初回のみ加算）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  viewCount:
+                    type: integer
+                    minimum: 0
+                required: [viewCount]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/comments:
+    post:
+      tags: [Deck]
+      summary: コメント追加
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeckCommentRequest"
+      responses:
+        "201":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    $ref: "#/components/schemas/DeckComment"
+                required: [comment]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/report:
+    post:
+      tags: [Deck]
+      summary: デッキ通報
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeckReportRequest"
+      responses:
+        "200":
+          description: 受理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 通報を受け付けました
+                required: [success, message]
+        default:
+          $ref: "#/components/responses/StandardErrors"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        uid:
+          type: string
+        llid:
+          type: string
+          nullable: true
+          description: 9 桁の Link Like ID
+          minLength: 9
+          maxLength: 9
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        bio:
+          type: string
+          nullable: true
+          maxLength: 500
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - uid
+        - displayName
+        - createdAt
+        - updatedAt
+    UserCreateRequest:
+      type: object
+      properties:
+        llid:
+          type: string
+          minLength: 9
+          maxLength: 9
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        bio:
+          type: string
+          maxLength: 500
+        avatarUrl:
+          $ref: "#/components/schemas/TmpStorageUrl"
+      required: [displayName]
+    UserUpdateRequest:
+      type: object
+      properties:
+        llid:
+          type: string
+          minLength: 9
+          maxLength: 9
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        bio:
+          type: string
+          maxLength: 500
+        avatarUrl:
+          $ref: "#/components/schemas/TmpStorageUrl"
+    DeckPublishRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 21
+          maxLength: 21
+          description: 公開 ID（ユニーク）
+        deck:
+          $ref: "#/components/schemas/DeckForCloud"
+        comment:
+          type: string
+          maxLength: 1000
+        hashtags:
+          type: array
+          items:
+            type: string
+        imageUrls:
+          type: array
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/TmpStorageUrl"
+        thumbnail:
+          $ref: "#/components/schemas/TmpStorageUrl"
+      required: [id, deck, hashtags]
+    DeckForCloud:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        slots:
+          type: array
+          minItems: 19
+          maxItems: 19
+          items:
+            $ref: "#/components/schemas/DeckSlotForCloud"
+        aceSlotId:
+          type: integer
+          minimum: 0
+          maximum: 17
+          nullable: true
+        deckType:
+          type: string
+        songId:
+          type: string
+        liveGrandPrixId:
+          type: string
+        liveGrandPrixDetailId:
+          type: string
+        score:
+          type: number
+        memo:
+          type: string
+      required:
+        - id
+        - name
+        - slots
+        - aceSlotId
+    DeckSlotForCloud:
+      type: object
+      properties:
+        slotId:
+          type: integer
+          minimum: 0
+          maximum: 99
+        cardId:
+          type: string
+          nullable: true
+        limitBreak:
+          type: integer
+          minimum: 0
+          maximum: 14
+      required:
+        - slotId
+        - cardId
+    PublishedDeck:
+      type: object
+      properties:
+        id:
+          type: string
+        deck:
+          $ref: "#/components/schemas/DeckForCloud"
+        userId:
+          type: string
+        userName:
+          type: string
+        comment:
+          type: string
+        hashtags:
+          type: array
+          items:
+            type: string
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        thumbnail:
+          type: string
+          format: uri
+        viewCount:
+          type: integer
+          minimum: 0
+        likeCount:
+          type: integer
+          minimum: 0
+        likedByCurrentUser:
+          type: boolean
+          default: false
+        publishedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - deck
+        - userId
+        - userName
+        - hashtags
+        - viewCount
+        - likeCount
+        - publishedAt
+    DeckComment:
+      type: object
+      properties:
+        id:
+          type: string
+        deckId:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - deckId
+        - userId
+        - userName
+        - text
+        - createdAt
+    DeckCommentRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required: [text]
+    DeckReportRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum: [inappropriate_content, spam, copyright, other]
+        details:
+          type: string
+          maxLength: 1000
+      required: [reason]
+    PopularHashtag:
+      type: object
+      properties:
+        hashtag:
+          type: string
+        count:
+          type: integer
+          minimum: 0
+      required: [hashtag, count]
+    PageInfo:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          minimum: 1
+        perPage:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalCount:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+      required:
+        - currentPage
+        - perPage
+        - totalCount
+        - totalPages
+        - hasNextPage
+        - hasPreviousPage
+    TmpStorageUrl:
+      type: string
+      format: uri
+      description: >-
+        Firebase Storage の tmp 配下の URL（`/tmp/` または `/tmp%2F` を含む必要あり）。
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          description: バリデーション詳細（ValidationError のみ）
+      required: [code, message]
+  responses:
+    StandardErrors:
+      description: エラー
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                $ref: "#/components/schemas/Error"
+            required: [error]
+          examples:
+            ValidationError:
+              summary: 入力不正
+              value:
+                error:
+                  code: VALIDATION_ERROR
+                  message: バリデーションエラー
+                  details:
+                    - path: [displayName]
+                      message: 必須項目です
+            Unauthenticated:
+              summary: 認証エラー
+              value:
+                error:
+                  code: UNAUTHENTICATED
+                  message: 認証トークンが必要です
+            Forbidden:
+              summary: 権限エラー
+              value:
+                error:
+                  code: FORBIDDEN
+                  message: 権限がありません
+            NotFound:
+              summary: リソースなし
+              value:
+                error:
+                  code: NOT_FOUND
+                  message: 指定されたデッキが見つかりません
