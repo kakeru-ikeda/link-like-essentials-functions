@@ -5,6 +5,8 @@ import type {
   DeckReport,
   GetDecksParams,
   PageInfo,
+  PopularHashtag,
+  PopularHashtagSummary,
   PublishedDeck,
 } from '@/domain/entities/Deck';
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
@@ -17,6 +19,7 @@ export class DeckRepository implements IDeckRepository {
   private readonly DECK_VIEWS_COLLECTION = 'deck_views';
   private readonly DECK_COMMENTS_COLLECTION = 'deck_comments';
   private readonly DECK_REPORTS_COLLECTION = 'deck_reports';
+  private readonly POPULAR_HASHTAGS_COLLECTION = 'popular_hashtags';
 
   private firestoreClient: FirestoreClient;
 
@@ -350,5 +353,92 @@ export class DeckRepository implements IDeckRepository {
       ...deck,
       likedByCurrentUser: likedDeckIds.has(deck.id),
     }));
+  }
+
+  /**
+   * 指定日時以降の公開デッキから人気ハッシュタグを集計
+   */
+  async aggregatePopularHashtagsSince(
+    since: Timestamp,
+    limit: number
+  ): Promise<PopularHashtag[]> {
+    const snapshot = await this.firestoreClient
+      .collection(this.PUBLISHED_DECKS_COLLECTION)
+      .where('publishedAt', '>=', since)
+      .get();
+
+    const hashtagCounts = new Map<string, number>();
+
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data() as PublishedDeck;
+      if (!Array.isArray(data.hashtags)) {
+        return;
+      }
+
+      data.hashtags.forEach((tag) => {
+        if (typeof tag !== 'string') {
+          return;
+        }
+        const normalized = tag.trim();
+        if (!normalized) {
+          return;
+        }
+        hashtagCounts.set(normalized, (hashtagCounts.get(normalized) || 0) + 1);
+      });
+    });
+
+    const sorted = Array.from(hashtagCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([hashtag, count]) => ({ hashtag, count }));
+
+    return sorted;
+  }
+
+  /**
+   * 人気ハッシュタグの集計結果を保存
+   */
+  async savePopularHashtags(
+    periodDays: number,
+    hashtags: PopularHashtag[],
+    aggregatedAt: Timestamp
+  ): Promise<void> {
+    const docId = `last_${periodDays}_days`;
+    const docRef = this.firestoreClient
+      .collection(this.POPULAR_HASHTAGS_COLLECTION)
+      .doc(docId);
+
+    await docRef.set(
+      sanitizeForFirestore({
+        periodDays,
+        hashtags,
+        aggregatedAt,
+      })
+    );
+  }
+
+  /**
+   * 人気ハッシュタグの集計結果を取得
+   */
+  async findPopularHashtags(
+    periodDays: number
+  ): Promise<PopularHashtagSummary | null> {
+    const docId = `last_${periodDays}_days`;
+    const docRef = this.firestoreClient
+      .collection(this.POPULAR_HASHTAGS_COLLECTION)
+      .doc(docId);
+
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return null;
+    }
+
+    const data = doc.data() as PopularHashtagSummary;
+
+    return {
+      ...data,
+      aggregatedAt: data.aggregatedAt,
+    };
   }
 }

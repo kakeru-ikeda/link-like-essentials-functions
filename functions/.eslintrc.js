@@ -12,6 +12,14 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier',
   ],
+  overrides: [
+    {
+      files: ['src/scripts/**/*.ts'],
+      rules: {
+        'no-console': 'off',
+      },
+    },
+  ],
   rules: {
     // TypeScript
     '@typescript-eslint/no-explicit-any': 'error',

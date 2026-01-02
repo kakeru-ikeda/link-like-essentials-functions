@@ -1,27 +1,23 @@
 import { Router } from 'express';
 
-import { DeckService } from '@/application/services/DeckService';
-import { DeckRepository } from '@/infrastructure/firestore/repositories/DeckRepository';
-import { UserRepository } from '@/infrastructure/firestore/repositories/UserRepository';
-import { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
 import { DeckController } from '@/presentation/controllers/DeckController';
+import { createDeckService } from '@/presentation/factories/deckServiceFactory';
 import { authenticate } from '@/presentation/middleware/authMiddleware';
 
 export const createDeckRouter = (): Router => {
   const router = Router();
 
   // 依存性注入
-  const deckRepository = new DeckRepository();
-  const userRepository = new UserRepository();
-  const deckImageStorage = new DeckImageStorage();
-  const deckService = new DeckService(
-    deckRepository,
-    userRepository,
-    deckImageStorage
-  );
+  const deckService = createDeckService();
   const deckController = new DeckController(deckService);
 
   // ルーティング定義
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get(
+    '/decks/hashtags',
+    authenticate,
+    deckController.getPopularHashtags
+  );
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.get('/decks', authenticate, deckController.getDecks);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises

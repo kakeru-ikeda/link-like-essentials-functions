@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 import { ValidationError } from '@/domain/errors/AppError';
 import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
@@ -53,7 +53,7 @@ export class DeckImageStorage {
 
         // 拡張子取得
         const ext = mimeType.split('/')[1];
-        const filename = `${uuidv4()}.${ext}`;
+        const filename = `${randomUUID()}.${ext}`;
         const destFilePath = `${this.BUCKET_PATH}/${deckId}/${filename}`;
 
         // ファイルを移動
@@ -99,7 +99,7 @@ export class DeckImageStorage {
     }
 
     const ext = mimeType.split('/')[1];
-    const filename = `${uuidv4()}.${ext}`;
+    const filename = `${randomUUID()}.${ext}`;
     const destFilePath = `${this.THUMBNAIL_PATH}/${deckId}/${filename}`;
 
     try {
@@ -136,7 +136,7 @@ export class DeckImageStorage {
 
     // 拡張子取得
     const ext = mimeType.split('/')[1];
-    const filename = `${uuidv4()}.${ext}`;
+    const filename = `${randomUUID()}.${ext}`;
     const filePath = `${this.BUCKET_PATH}/${deckId}/${filename}`;
 
     return await this.storageUtil.uploadFile(filePath, fileBuffer, mimeType);
