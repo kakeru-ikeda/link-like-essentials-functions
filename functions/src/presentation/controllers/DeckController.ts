@@ -1,7 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import type { DeckService } from '@/application/services/DeckService';
-import type { DeckComment, PublishedDeck } from '@/domain/entities/Deck';
+import type {
+  DeckComment,
+  PopularHashtag,
+  PublishedDeck,
+} from '@/domain/entities/Deck';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   DeckCommentSchema,
@@ -35,6 +39,11 @@ interface DeckCommentResponse {
   createdAt: string;
 }
 
+interface PopularHashtagsResponse {
+  hashtags: PopularHashtag[];
+  aggregatedAt: string | null;
+}
+
 // Timestamp変換ヘルパー
 const toPublishedDeckResponse = (
   deck: PublishedDeck
@@ -64,6 +73,35 @@ const toCommentResponse = (comment: DeckComment): DeckCommentResponse => ({
 
 export class DeckController {
   constructor(private deckService: DeckService) {}
+
+  /**
+   * GET /decks/hashtags - 人気ハッシュタグ取得
+   */
+  public getPopularHashtags = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const result = await this.deckService.getPopularHashtags();
+
+      const response: PopularHashtagsResponse = {
+        hashtags: result.hashtags,
+        aggregatedAt: result.aggregatedAt
+          ? result.aggregatedAt.toDate().toISOString()
+          : null,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   /**
    * GET /decks - デッキ一覧取得

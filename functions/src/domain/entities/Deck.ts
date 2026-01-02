@@ -93,6 +93,23 @@ export interface PageInfo {
 }
 
 /**
+ * 人気ハッシュタグ情報
+ */
+export interface PopularHashtag {
+  hashtag: string;
+  count: number;
+}
+
+/**
+ * 人気ハッシュタグ集計結果
+ */
+export interface PopularHashtagSummary {
+  periodDays: number;
+  hashtags: PopularHashtag[];
+  aggregatedAt: Timestamp;
+}
+
+/**
  * デッキ一覧取得パラメータ
  */
 export interface GetDecksParams {

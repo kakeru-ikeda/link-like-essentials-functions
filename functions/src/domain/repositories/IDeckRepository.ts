@@ -1,8 +1,12 @@
+import type { Timestamp } from 'firebase-admin/firestore';
+
 import type {
   DeckComment,
   DeckReport,
   GetDecksParams,
   PageInfo,
+  PopularHashtag,
+  PopularHashtagSummary,
   PublishedDeck,
 } from '../entities/Deck';
 
@@ -88,4 +92,29 @@ export interface IDeckRepository {
    * デッキに関連する全データを削除（いいね、閲覧、コメント）
    */
   deleteDeckRelatedData(deckId: string): Promise<void>;
+
+  // ========== Hashtag Aggregation ==========
+  /**
+   * 指定日時以降のハッシュタグを集計
+   */
+  aggregatePopularHashtagsSince(
+    since: Timestamp,
+    limit: number
+  ): Promise<PopularHashtag[]>;
+
+  /**
+   * 集計結果を保存
+   */
+  savePopularHashtags(
+    periodDays: number,
+    hashtags: PopularHashtag[],
+    aggregatedAt: Timestamp
+  ): Promise<void>;
+
+  /**
+   * 集計済みの人気ハッシュタグを取得
+   */
+  findPopularHashtags(
+    periodDays: number
+  ): Promise<PopularHashtagSummary | null>;
 }

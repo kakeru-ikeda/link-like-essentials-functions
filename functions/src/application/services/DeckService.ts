@@ -6,6 +6,7 @@ import type {
   DeckReport,
   GetDecksParams,
   PageInfo,
+  PopularHashtag,
   PublishedDeck,
 } from '@/domain/entities/Deck';
 import {
@@ -300,5 +301,45 @@ export class DeckService {
       details,
       createdAt: Timestamp.now(),
     });
+  }
+
+  /**
+   * 人気ハッシュタグを集計して保存
+   */
+  async aggregatePopularHashtags(
+    periodDays = 30,
+    limit = 50
+  ): Promise<{ hashtags: PopularHashtag[]; aggregatedAt: Timestamp }> {
+    const now = Timestamp.now();
+    const since = Timestamp.fromMillis(
+      now.toMillis() - periodDays * 24 * 60 * 60 * 1000
+    );
+
+    const hashtags = await this.deckRepository.aggregatePopularHashtagsSince(
+      since,
+      limit
+    );
+
+    await this.deckRepository.savePopularHashtags(periodDays, hashtags, now);
+
+    return { hashtags, aggregatedAt: now };
+  }
+
+  /**
+   * 集計済みの人気ハッシュタグを取得
+   */
+  async getPopularHashtags(
+    periodDays = 30
+  ): Promise<{ hashtags: PopularHashtag[]; aggregatedAt: Timestamp | null }> {
+    const summary = await this.deckRepository.findPopularHashtags(periodDays);
+
+    if (!summary) {
+      return { hashtags: [], aggregatedAt: null };
+    }
+
+    return {
+      hashtags: summary.hashtags,
+      aggregatedAt: summary.aggregatedAt,
+    };
   }
 }

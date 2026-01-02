@@ -4,6 +4,7 @@ import * as functions from 'firebase-functions';
 
 import { initializeFirebase } from '@/config/firebase';
 import { errorHandler } from '@/presentation/middleware/errorHandler';
+import { createDeckService } from '@/presentation/factories/deckServiceFactory';
 import { createDeckRouter } from '@/presentation/routes/deckRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
 
@@ -31,3 +32,13 @@ export const userApi = functions
 export const deckApi = functions
   .region('asia-northeast1')
   .https.onRequest(deckApp);
+
+// 人気ハッシュタグ集計ジョブ（毎日0時・12時 JST）
+export const aggregatePopularHashtags = functions
+  .region('asia-northeast1')
+  .pubsub.schedule('0 0,12 * * *')
+  .timeZone('Asia/Tokyo')
+  .onRun(async () => {
+    const deckService = createDeckService();
+    await deckService.aggregatePopularHashtags();
+  });
