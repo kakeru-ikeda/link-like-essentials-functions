@@ -8,7 +8,8 @@ const main = async (): Promise<void> => {
 
   console.log('人気ハッシュタグ集計を実行します（期間: 30日, 上位: 50件）...');
 
-  const { hashtags, aggregatedAt } = await deckService.aggregatePopularHashtags();
+  const { hashtags, aggregatedAt } =
+    await deckService.aggregatePopularHashtags();
 
   console.log('集計完了');
   console.log(`aggregatedAt: ${aggregatedAt.toDate().toISOString()}`);
