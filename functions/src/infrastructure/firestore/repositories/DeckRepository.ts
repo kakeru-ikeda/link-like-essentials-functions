@@ -27,6 +27,19 @@ export class DeckRepository implements IDeckRepository {
     this.firestoreClient = new FirestoreClient();
   }
 
+  private normalizeHashtag(tag?: string): string | null {
+    if (!tag) {
+      return null;
+    }
+
+    const normalized = tag.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    return normalized.startsWith('#') ? normalized : `#${normalized}`;
+  }
+
   /**
    * デッキを保存（データアクセスのみ）
    */
@@ -64,8 +77,9 @@ export class DeckRepository implements IDeckRepository {
       query = query.where('deck.songId', '==', params.songId);
     }
 
-    if (params.tag) {
-      query = query.where('hashtags', 'array-contains', params.tag);
+    const normalizedTag = this.normalizeHashtag(params.tag);
+    if (normalizedTag) {
+      query = query.where('hashtags', 'array-contains', normalizedTag);
     }
 
     // ソート
