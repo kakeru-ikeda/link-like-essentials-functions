@@ -21,6 +21,10 @@ export const createDeckRouter = (): Router => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.get('/decks', authenticate, deckController.getDecks);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/decks/me', authenticate, deckController.getMyDecks);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/decks/me/likes', authenticate, deckController.getLikedDecks);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.get('/decks/:id', authenticate, deckController.getDeckById);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post('/decks/publish', authenticate, deckController.publishDeck);

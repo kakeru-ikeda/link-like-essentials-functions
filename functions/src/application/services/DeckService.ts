@@ -5,6 +5,7 @@ import type {
   DeckPublicationRequest,
   DeckReport,
   GetDecksParams,
+  GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
   PublishedDeck,
@@ -109,6 +110,34 @@ export class DeckService {
     currentUserId: string
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
     return await this.deckRepository.findPublishedDecks(params, currentUserId);
+  }
+
+  /**
+   * 自分が投稿したデッキ一覧を取得
+   */
+  async getMyPublishedDecks(
+    params: GetDecksParams,
+    currentUserId: string
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    const { userId: _ignored, ...rest } = params;
+
+    return await this.deckRepository.findPublishedDecks(
+      { ...rest, userId: currentUserId },
+      currentUserId
+    );
+  }
+
+  /**
+   * 自分がいいねしたデッキ一覧を取得
+   */
+  async getLikedDecks(
+    params: GetLikedDecksParams,
+    currentUserId: string
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    return await this.deckRepository.findLikedDecksByUser(
+      currentUserId,
+      params
+    );
   }
 
   /**
