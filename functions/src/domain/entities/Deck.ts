@@ -121,3 +121,8 @@ export interface GetDecksParams {
   songId?: string;
   tag?: string;
 }
+
+export interface GetLikedDecksParams {
+  page?: number;
+  perPage?: number;
+}

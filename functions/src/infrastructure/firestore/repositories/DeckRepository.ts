@@ -4,6 +4,7 @@ import type {
   DeckComment,
   DeckReport,
   GetDecksParams,
+  GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
   PopularHashtagSummary,
@@ -116,6 +117,83 @@ export class DeckRepository implements IDeckRepository {
     };
 
     return { decks: decksWithLikeFlag, pageInfo };
+  }
+
+  /**
+   * 指定ユーザーがいいねしたデッキ一覧を取得（ページネーション付き）
+   */
+  async findLikedDecksByUser(
+    userId: string,
+    params: GetLikedDecksParams
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    const page = params.page || 1;
+    const perPage = Math.min(params.perPage || 20, 100);
+
+    const baseQuery = this.firestoreClient
+      .collection(this.DECK_LIKES_COLLECTION)
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc');
+
+    const countSnapshot = await baseQuery.count().get();
+    const totalCount = countSnapshot.data().count;
+
+    const offset = (page - 1) * perPage;
+    const likesSnapshot = await baseQuery.offset(offset).limit(perPage).get();
+
+    const likedDeckIdOrder = likesSnapshot.docs
+      .map((doc) => (doc.data() as { deckId?: string }).deckId)
+      .filter((deckId): deckId is string => Boolean(deckId));
+
+    if (likedDeckIdOrder.length === 0) {
+      const totalPages = Math.ceil(totalCount / perPage);
+      const pageInfo: PageInfo = {
+        currentPage: page,
+        perPage,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      };
+
+      return { decks: [], pageInfo };
+    }
+
+    const deckDocs = await Promise.all(
+      likedDeckIdOrder.map((deckId) =>
+        this.firestoreClient
+          .collection(this.PUBLISHED_DECKS_COLLECTION)
+          .doc(deckId)
+          .get()
+      )
+    );
+
+    const orderMap = new Map<string, number>();
+    likedDeckIdOrder.forEach((deckId, index) => orderMap.set(deckId, index));
+
+    const decks = deckDocs
+      .filter((doc) => doc.exists)
+      .map((doc) => ({
+        ...(doc.data() as PublishedDeck),
+        id: doc.id,
+        likedByCurrentUser: true,
+      }))
+      .sort((a, b) => {
+        const orderA = orderMap.get(a.id) ?? 0;
+        const orderB = orderMap.get(b.id) ?? 0;
+        return orderA - orderB;
+      });
+
+    const totalPages = Math.ceil(totalCount / perPage);
+    const pageInfo: PageInfo = {
+      currentPage: page,
+      perPage,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
+
+    return { decks, pageInfo };
   }
 
   /**

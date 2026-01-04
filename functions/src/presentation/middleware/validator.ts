@@ -91,3 +91,17 @@ export const GetDecksQuerySchema = z.object({
   songId: z.string().optional(),
   tag: z.string().optional(),
 });
+
+export const GetMyDecksQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
+  orderBy: z.enum(['publishedAt', 'viewCount', 'likeCount']).optional(),
+  order: z.enum(['asc', 'desc']).optional().default('desc'),
+  songId: z.string().optional(),
+  tag: z.string().optional(),
+});
+
+export const GetLikedDecksQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
+});

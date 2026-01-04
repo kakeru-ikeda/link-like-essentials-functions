@@ -4,6 +4,7 @@ import type {
   DeckComment,
   DeckReport,
   GetDecksParams,
+  GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
   PopularHashtagSummary,
@@ -23,6 +24,14 @@ export interface IDeckRepository {
   findPublishedDecks(
     params: GetDecksParams,
     currentUserId?: string
+  ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }>;
+
+  /**
+   * 指定ユーザーがいいねしたデッキ一覧を取得（ページネーション付き）
+   */
+  findLikedDecksByUser(
+    userId: string,
+    params: GetLikedDecksParams
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }>;
 
   /**

@@ -11,7 +11,9 @@ import {
   DeckCommentSchema,
   DeckPublishSchema,
   DeckReportSchema,
+  GetLikedDecksQuerySchema,
   GetDecksQuerySchema,
+  GetMyDecksQuerySchema,
 } from '@/presentation/middleware/validator';
 
 // フロントエンド向けのレスポンス型（Timestamp → ISO 8601変換済み）
@@ -119,6 +121,58 @@ export class DeckController {
 
       const params = GetDecksQuerySchema.parse(req.query);
       const result = await this.deckService.getPublishedDecks(params, uid);
+
+      res.status(200).json({
+        publishedDecks: result.decks.map(toPublishedDeckResponse),
+        pageInfo: result.pageInfo,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /decks/me - 自分が投稿したデッキ一覧取得
+   */
+  public getMyDecks = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const params = GetMyDecksQuerySchema.parse(req.query);
+      const result = await this.deckService.getMyPublishedDecks(params, uid);
+
+      res.status(200).json({
+        publishedDecks: result.decks.map(toPublishedDeckResponse),
+        pageInfo: result.pageInfo,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /decks/me/likes - 自分がいいねしたデッキ一覧取得
+   */
+  public getLikedDecks = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const params = GetLikedDecksQuerySchema.parse(req.query);
+      const result = await this.deckService.getLikedDecks(params, uid);
 
       res.status(200).json({
         publishedDecks: result.decks.map(toPublishedDeckResponse),
