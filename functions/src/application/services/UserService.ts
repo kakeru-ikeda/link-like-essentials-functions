@@ -3,7 +3,7 @@ import type {
   UserCreateInput,
   UserUpdateInput,
 } from '@/domain/entities/User';
-import { ConflictError, NotFoundError } from '@/domain/errors/AppError';
+import { NotFoundError } from '@/domain/errors/AppError';
 import type { IUserRepository } from '@/domain/repositories/IUserRepository';
 import type { AvatarStorage } from '@/infrastructure/storage/AvatarStorage';
 
@@ -35,12 +35,12 @@ export class UserService {
     bio?: string,
     llid?: string,
     avatarUrl?: string
-  ): Promise<User> {
-    // 既存ユーザーチェック
+  ): Promise<{ user: User; created: boolean }> {
+    // 既存ユーザーがいればそのまま返却して冪等にする
     const existingUser = await this.userRepository.findByUid(uid);
 
     if (existingUser) {
-      throw new ConflictError('ユーザーは既に登録されています');
+      return { user: existingUser, created: false };
     }
 
     const input: UserCreateInput = {
@@ -58,7 +58,9 @@ export class UserService {
       );
     }
 
-    return await this.userRepository.create(input);
+    const createdUser = await this.userRepository.create(input);
+
+    return { user: createdUser, created: true };
   }
 
   /**

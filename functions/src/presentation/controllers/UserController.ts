@@ -72,7 +72,7 @@ export class UserController {
       }
 
       const validatedBody = UserCreateSchema.parse(req.body);
-      const user = await this.userService.createProfile(
+      const { user, created } = await this.userService.createProfile(
         uid,
         validatedBody.displayName,
         validatedBody.bio,
@@ -80,7 +80,7 @@ export class UserController {
         validatedBody.avatarUrl
       );
 
-      res.status(201).json({ user: toUserProfile(user) });
+      res.status(created ? 201 : 200).json({ user: toUserProfile(user) });
     } catch (error) {
       next(error);
     }
