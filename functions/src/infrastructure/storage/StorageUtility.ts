@@ -188,4 +188,42 @@ export class StorageUtility {
   getBucketName(): string {
     return this.bucket.bucket().name;
   }
+
+  /**
+   * tmpディレクトリ内の24時間以上経過したファイルを削除
+   * @returns 削除されたファイル数
+   */
+  async cleanupOldTmpFiles(): Promise<number> {
+    try {
+      const [files] = await this.bucket.bucket().getFiles({
+        prefix: 'tmp/',
+      });
+
+      const now = Date.now();
+      const oneDayInMs = 24 * 60 * 60 * 1000; // 24時間をミリ秒で表現
+      let deletedCount = 0;
+
+      for (const file of files) {
+        try {
+          const [metadata] = await file.getMetadata();
+          const timeCreated = metadata.timeCreated
+            ? new Date(metadata.timeCreated).getTime()
+            : null;
+
+          if (timeCreated && now - timeCreated > oneDayInMs) {
+            await file.delete();
+            deletedCount++;
+          }
+        } catch (error) {
+          // 個別ファイルの削除エラーは記録のみで処理を続行
+          console.error(`Failed to delete file ${file.name}:`, error);
+        }
+      }
+
+      return deletedCount;
+    } catch (error) {
+      console.error('Failed to cleanup tmp files:', error);
+      throw error;
+    }
+  }
 }
