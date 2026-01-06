@@ -7,6 +7,7 @@ import { errorHandler } from '@/presentation/middleware/errorHandler';
 import { createDeckService } from '@/presentation/factories/deckServiceFactory';
 import { createDeckRouter } from '@/presentation/routes/deckRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
+import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 
 // Firebase初期化
 initializeFirebase();
@@ -41,4 +42,14 @@ export const aggregatePopularHashtags = functions
   .onRun(async () => {
     const deckService = createDeckService();
     await deckService.aggregatePopularHashtags();
+  });
+
+// tmpディレクトリの古いファイル削除ジョブ（毎日3時 JST）
+export const cleanupOldTmpFiles = functions
+  .region('asia-northeast1')
+  .pubsub.schedule('0 3 * * *')
+  .timeZone('Asia/Tokyo')
+  .onRun(async () => {
+    const storageUtility = new StorageUtility();
+    await storageUtility.cleanupOldTmpFiles();
   });
