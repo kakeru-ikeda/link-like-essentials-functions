@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/google-cloud-serverless';
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 
@@ -43,6 +44,7 @@ export const errorHandler = (
   // その他のエラー
   // eslint-disable-next-line no-console
   console.error('Unexpected error:', error);
+  Sentry.captureException(error);
   res.status(500).json({
     error: {
       code: 'INTERNAL_SERVER_ERROR',
