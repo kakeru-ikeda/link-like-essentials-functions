@@ -32,6 +32,13 @@ export const errorHandler = (
 
   // カスタムAppError
   if (error instanceof AppError) {
+    // 4xx系は warning、5xx系は error
+    if (error.statusCode >= 400 && error.statusCode < 500) {
+      Sentry.captureException(error, { level: 'warning' });
+    } else if (error.statusCode >= 500) {
+      Sentry.captureException(error, { level: 'error' });
+    }
+
     res.status(error.statusCode).json({
       error: {
         code: error.code,
