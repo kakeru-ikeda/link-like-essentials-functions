@@ -34,6 +34,11 @@ jobs:
         working-directory: ./functions
         run: npm run build
 
+      - name: Create .env.yaml
+        working-directory: ./functions
+        run: |
+          echo "SENTRY_DSN: \"${{ secrets.SENTRY_DSN }}\"" > .env.yaml
+
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
@@ -41,7 +46,6 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Notify Discord - Success
         if: success()
