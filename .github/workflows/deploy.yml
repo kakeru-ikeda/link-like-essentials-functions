@@ -34,10 +34,22 @@ jobs:
         working-directory: ./functions
         run: npm run build
 
+      - name: Set Firebase Secret SENTRY_DSN
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          set -euo pipefail
+          echo -n "$SENTRY_DSN" > /tmp/sentry_dsn.txt
+          npx firebase functions:secrets:set SENTRY_DSN \
+            --project "$PROJECT_ID" \
+            --data-file /tmp/sentry_dsn.txt
+
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions --force --set-env-vars "SENTRY_DSN=${{ secrets.SENTRY_DSN }}"
+          args: deploy --only functions --force
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
