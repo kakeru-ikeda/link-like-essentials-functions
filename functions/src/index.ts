@@ -12,6 +12,16 @@ import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 
 const sentryDsn = process.env.SENTRY_DSN;
 
+if (!sentryDsn) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    'Warning: SENTRY_DSN is not set. Sentry will not be initialized.'
+  );
+} else {
+  // eslint-disable-next-line no-console
+  console.log('Sentry DSN is configured');
+}
+
 Sentry.init({
   dsn: sentryDsn,
   sendDefaultPii: true,
