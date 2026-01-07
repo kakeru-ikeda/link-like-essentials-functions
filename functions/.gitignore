@@ -39,7 +39,6 @@ firebase-debug.*.log
 .env
 .env.local
 .env.*.local
-.env.yaml
 
 # Test coverage
 coverage/
