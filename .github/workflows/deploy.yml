@@ -34,10 +34,10 @@ jobs:
         working-directory: ./functions
         run: npm run build
 
-      - name: Create .env.yaml
+      - name: Create .env file
         working-directory: ./functions
         run: |
-          echo "SENTRY_DSN: \"${{ secrets.SENTRY_DSN }}\"" > .env.yaml
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" > .env
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master

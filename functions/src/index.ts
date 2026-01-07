@@ -1,7 +1,10 @@
 import * as Sentry from '@sentry/google-cloud-serverless';
 import cors from 'cors';
+import * as dotenv from 'dotenv';
 import express from 'express';
 import * as functions from 'firebase-functions';
+
+dotenv.config();
 
 import { initializeFirebase } from '@/config/firebase';
 import { errorHandler } from '@/presentation/middleware/errorHandler';
