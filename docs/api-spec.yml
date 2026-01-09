@@ -716,7 +716,6 @@ components:
         - userId
         - userName
         - hashtags
-        - isUnlisted
         - viewCount
         - likeCount
         - publishedAt
