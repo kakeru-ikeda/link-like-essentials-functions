@@ -68,29 +68,42 @@ export class DeckRepository implements IDeckRepository {
     const orderBy = params.orderBy || 'publishedAt';
     const order = params.order || 'desc';
 
-    let query: FirebaseFirestore.CollectionReference | FirebaseFirestore.Query =
-      this.firestoreClient.collection(this.PUBLISHED_DECKS_COLLECTION);
+    let baseQuery:
+      | FirebaseFirestore.CollectionReference
+      | FirebaseFirestore.Query = this.firestoreClient.collection(
+      this.PUBLISHED_DECKS_COLLECTION
+    );
 
     // フィルタ条件を適用
     if (params.userId) {
-      query = query.where('userId', '==', params.userId);
+      baseQuery = baseQuery.where('userId', '==', params.userId);
     }
 
     if (params.songId) {
-      query = query.where('deck.songId', '==', params.songId);
+      baseQuery = baseQuery.where('deck.songId', '==', params.songId);
     }
 
     const normalizedTag = this.normalizeHashtag(params.tag);
     if (normalizedTag) {
-      query = query.where('hashtags', 'array-contains', normalizedTag);
+      baseQuery = baseQuery.where('hashtags', 'array-contains', normalizedTag);
     }
 
-    // ソート
-    query = query.orderBy(orderBy, order);
+    // 公開一覧に非表示を含めない場合はクエリ段階で除外する
+    if (!includeUnlisted) {
+      baseQuery = baseQuery.where('isUnlisted', '!=', true);
+    }
 
-    // 総件数を取得
-    const countSnapshot = await query.count().get();
-    const totalCount = countSnapshot.data().count;
+    // 総件数を取得（クエリ条件に準拠）
+    const countSnapshot = await baseQuery.count().get();
+    const totalCountVisible = countSnapshot.data().count;
+
+    // ソート
+    let query = baseQuery;
+    if (!includeUnlisted) {
+      // Firestore の不等号フィルター使用時は同一フィールドで orderBy が必要
+      query = query.orderBy('isUnlisted');
+    }
+    query = query.orderBy(orderBy, order);
 
     // ページネーション
     const offset = (page - 1) * perPage;
@@ -116,14 +129,14 @@ export class DeckRepository implements IDeckRepository {
     );
 
     // ページネーション情報
-    const totalPages = Math.ceil(totalCount / perPage);
+    const totalPages = Math.ceil(totalCountVisible / perPage);
     const pageInfo: PageInfo = {
       currentPage: page,
       perPage,
-      totalCount,
+      totalCount: totalCountVisible,
       totalPages,
       hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
+      hasPreviousPage: page > 1 && totalCountVisible > 0,
     };
 
     return { decks: decksWithLikeFlag, pageInfo };
