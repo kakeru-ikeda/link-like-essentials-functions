@@ -609,6 +609,10 @@ components:
             $ref: "#/components/schemas/TmpStorageUrl"
         thumbnail:
           $ref: "#/components/schemas/TmpStorageUrl"
+        isUnlisted:
+          type: boolean
+          description: true の場合、一覧には表示せず直接リンクのみでアクセス可能
+          default: false
       required: [id, deck, hashtags]
     DeckForCloud:
       type: object
@@ -690,6 +694,10 @@ components:
         thumbnail:
           type: string
           format: uri
+        isUnlisted:
+          type: boolean
+          description: 一覧非掲載フラグ
+          default: false
         viewCount:
           type: integer
           minimum: 0

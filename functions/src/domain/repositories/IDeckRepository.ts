@@ -23,7 +23,8 @@ export interface IDeckRepository {
    */
   findPublishedDecks(
     params: GetDecksParams,
-    currentUserId?: string
+    currentUserId?: string,
+    options?: { includeUnlisted?: boolean }
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }>;
 
   /**

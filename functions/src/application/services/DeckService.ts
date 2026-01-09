@@ -91,6 +91,7 @@ export class DeckService {
       hashtags: request.hashtags || [],
       imageUrls: movedImageUrls,
       thumbnail: movedThumbnail,
+      isUnlisted: request.isUnlisted ?? false,
       viewCount: 0,
       likeCount: 0,
       publishedAt: now,
@@ -123,7 +124,8 @@ export class DeckService {
 
     return await this.deckRepository.findPublishedDecks(
       { ...rest, userId: currentUserId },
-      currentUserId
+      currentUserId,
+      { includeUnlisted: true }
     );
   }
 
