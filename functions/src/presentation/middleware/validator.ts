@@ -68,6 +68,7 @@ export const DeckPublishSchema = z.object({
   hashtags: z.array(z.string()),
   imageUrls: z.array(tmpDeckAssetUrlSchema).max(3).optional(),
   thumbnail: tmpDeckAssetUrlSchema.optional(),
+  isUnlisted: z.boolean().optional().default(false),
 });
 
 // コメント追加スキーマ

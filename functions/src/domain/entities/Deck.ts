@@ -40,6 +40,7 @@ export interface PublishedDeck {
   hashtags: string[];
   imageUrls?: string[];
   thumbnail?: string;
+  isUnlisted?: boolean;
   viewCount: number;
   likeCount: number;
   likedByCurrentUser?: boolean;
@@ -53,7 +54,13 @@ export interface PublishedDeck {
  */
 export type DeckPublicationRequest = Pick<
   PublishedDeck,
-  'id' | 'deck' | 'comment' | 'hashtags' | 'imageUrls' | 'thumbnail'
+  | 'id'
+  | 'deck'
+  | 'comment'
+  | 'hashtags'
+  | 'imageUrls'
+  | 'thumbnail'
+  | 'isUnlisted'
 >;
 
 /**

@@ -59,8 +59,10 @@ export class DeckRepository implements IDeckRepository {
    */
   async findPublishedDecks(
     params: GetDecksParams,
-    currentUserId?: string
+    currentUserId?: string,
+    options?: { includeUnlisted?: boolean }
   ): Promise<{ decks: PublishedDeck[]; pageInfo: PageInfo }> {
+    const includeUnlisted = options?.includeUnlisted ?? false;
     const page = params.page || 1;
     const perPage = Math.min(params.perPage || 20, 100);
     const orderBy = params.orderBy || 'publishedAt';
@@ -95,15 +97,23 @@ export class DeckRepository implements IDeckRepository {
     query = query.offset(offset).limit(perPage);
 
     const snapshot = await query.get();
-    const decks = snapshot.docs.map(
-      (doc) =>
-        ({
-          ...doc.data(),
-          id: doc.id,
-        }) as PublishedDeck
-    );
+    const decks = snapshot.docs.map((doc) => {
+      const data = doc.data() as PublishedDeck;
+      return {
+        ...data,
+        id: doc.id,
+        isUnlisted: data.isUnlisted ?? false,
+      } as PublishedDeck;
+    });
 
-    const decksWithLikeFlag = await this.attachLikedFlag(decks, currentUserId);
+    const visibleDecks = includeUnlisted
+      ? decks
+      : decks.filter((deck) => deck.isUnlisted !== true);
+
+    const decksWithLikeFlag = await this.attachLikedFlag(
+      visibleDecks,
+      currentUserId
+    );
 
     // ページネーション情報
     const totalPages = Math.ceil(totalCount / perPage);
@@ -172,11 +182,15 @@ export class DeckRepository implements IDeckRepository {
 
     const decks = deckDocs
       .filter((doc) => doc.exists)
-      .map((doc) => ({
-        ...(doc.data() as PublishedDeck),
-        id: doc.id,
-        likedByCurrentUser: true,
-      }))
+      .map((doc) => {
+        const data = doc.data() as PublishedDeck;
+        return {
+          ...data,
+          id: doc.id,
+          isUnlisted: data.isUnlisted ?? false,
+          likedByCurrentUser: true,
+        };
+      })
       .sort((a, b) => {
         const orderA = orderMap.get(a.id) ?? 0;
         const orderB = orderMap.get(b.id) ?? 0;
@@ -216,9 +230,12 @@ export class DeckRepository implements IDeckRepository {
       ? await this.hasLiked(id, currentUserId)
       : undefined;
 
+    const data = doc.data() as PublishedDeck;
+
     return {
-      ...(doc.data() as PublishedDeck),
+      ...data,
       id: doc.id,
+      isUnlisted: data.isUnlisted ?? false,
       likedByCurrentUser,
     };
   }
@@ -463,6 +480,9 @@ export class DeckRepository implements IDeckRepository {
 
     snapshot.docs.forEach((doc) => {
       const data = doc.data() as PublishedDeck;
+      if (data.isUnlisted === true) {
+        return;
+      }
       if (!Array.isArray(data.hashtags)) {
         return;
       }

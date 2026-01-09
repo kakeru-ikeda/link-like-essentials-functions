@@ -26,6 +26,7 @@ interface PublishedDeckResponse {
   hashtags: string[];
   imageUrls?: string[];
   thumbnail?: string;
+  isUnlisted: boolean;
   viewCount: number;
   likeCount: number;
   likedByCurrentUser?: boolean;
@@ -58,6 +59,7 @@ const toPublishedDeckResponse = (
   hashtags: deck.hashtags,
   imageUrls: deck.imageUrls,
   thumbnail: deck.thumbnail,
+  isUnlisted: deck.isUnlisted ?? false,
   viewCount: deck.viewCount,
   likeCount: deck.likeCount,
   likedByCurrentUser: deck.likedByCurrentUser ?? false,
