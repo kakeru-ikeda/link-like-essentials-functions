@@ -119,6 +119,35 @@ paths:
                 required: [user]
         default:
           $ref: "#/components/responses/StandardErrors"
+  /auth/upgrade/email:
+    post:
+      tags: [Auth]
+      summary: 匿名ユーザーをメールユーザーに昇格
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthUpgradeEmailRequest"
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                  verificationLink:
+                    type: string
+                    format: uri
+                    nullable: true
+                required: [user]
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /decks/hashtags:
     get:
       tags: [Deck]
@@ -541,6 +570,8 @@ components:
           type: string
           format: uri
           nullable: true
+        role:
+          $ref: "#/components/schemas/UserRole"
         createdAt:
           type: string
           format: date-time
@@ -550,8 +581,12 @@ components:
       required:
         - uid
         - displayName
+        - role
         - createdAt
         - updatedAt
+    UserRole:
+      type: string
+      enum: [anonymous, email]
     UserCreateRequest:
       type: object
       properties:
@@ -614,6 +649,20 @@ components:
           description: true の場合、一覧には表示せず直接リンクのみでアクセス可能
           default: false
       required: [id, deck, hashtags]
+    AuthUpgradeEmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+      required: [email, password]
     DeckForCloud:
       type: object
       properties:
