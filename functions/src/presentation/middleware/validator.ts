@@ -34,6 +34,12 @@ export const UserUpdateSchema = z.object({
   avatarUrl: tmpAvatarUrlSchema.optional(),
 });
 
+export const AuthUpgradeEmailSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(1).max(50).optional(),
+});
+
 // デッキ公開API用のバリデーションスキーマ
 
 // デッキスロットスキーマ（公開用）

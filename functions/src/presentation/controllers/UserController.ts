@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 
 import type { UserService } from '@/application/services/UserService';
-import type { User } from '@/domain/entities/User';
+import type { User, UserRole } from '@/domain/entities/User';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   UserCreateSchema,
@@ -15,17 +15,19 @@ interface UserProfile {
   displayName: string;
   bio?: string | null;
   avatarUrl?: string | null;
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
 }
 
 // UserエンティティをUserProfileに変換
-const toUserProfile = (user: User): UserProfile => ({
+export const toUserProfile = (user: User): UserProfile => ({
   uid: user.uid,
   llid: user.llid,
   displayName: user.displayName,
   bio: user.bio,
   avatarUrl: user.avatarUrl,
+  role: user.role ?? 'anonymous',
   createdAt: user.createdAt.toDate().toISOString(),
   updatedAt: user.updatedAt.toDate().toISOString(),
 });

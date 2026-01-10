@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import type {
   User,
   UserCreateInput,
+  UserRole,
   UserUpdateInput,
 } from '@/domain/entities/User';
 import { NotFoundError } from '@/domain/errors/AppError';
@@ -28,9 +29,17 @@ export class UserRepository implements IUserRepository {
       return null;
     }
 
+    const data = doc.data() as Partial<User>;
+
     return {
-      ...(doc.data() as User),
       uid: doc.id,
+      llid: data.llid ?? null,
+      displayName: data.displayName as string,
+      bio: data.bio ?? null,
+      avatarUrl: data.avatarUrl ?? null,
+      role: this.resolveRole(data.role),
+      createdAt: data.createdAt as Timestamp,
+      updatedAt: data.updatedAt as Timestamp,
     };
   }
 
@@ -41,6 +50,7 @@ export class UserRepository implements IUserRepository {
       displayName: input.displayName,
       bio: input.bio,
       avatarUrl: input.avatarUrl,
+      role: this.resolveRole(input.role),
       createdAt: now,
       updatedAt: now,
     };
@@ -69,17 +79,43 @@ export class UserRepository implements IUserRepository {
     }
 
     const updateData: Record<string, unknown> = {
-      ...input,
       updatedAt: Timestamp.now(),
     };
+
+    if (input.llid !== undefined) {
+      updateData.llid = input.llid;
+    }
+
+    if (input.displayName !== undefined) {
+      updateData.displayName = input.displayName;
+    }
+
+    if (input.bio !== undefined) {
+      updateData.bio = input.bio;
+    }
+
+    if (input.avatarUrl !== undefined) {
+      updateData.avatarUrl = input.avatarUrl;
+    }
+
+    if (input.role !== undefined) {
+      updateData.role = input.role;
+    }
 
     // undefined を null に変換してから保存
     await docRef.set(sanitizeForFirestore(updateData), { merge: true });
 
     const updatedDoc = await docRef.get();
+    const updatedData = updatedDoc.data() as Partial<User>;
     return {
-      ...(updatedDoc.data() as User),
       uid: updatedDoc.id,
+      llid: updatedData.llid ?? null,
+      displayName: updatedData.displayName as string,
+      bio: updatedData.bio ?? null,
+      avatarUrl: updatedData.avatarUrl ?? null,
+      role: this.resolveRole(updatedData.role),
+      createdAt: updatedData.createdAt as Timestamp,
+      updatedAt: updatedData.updatedAt as Timestamp,
     };
   }
 
@@ -94,5 +130,9 @@ export class UserRepository implements IUserRepository {
     }
 
     await docRef.delete();
+  }
+
+  private resolveRole(role: UserRole | null | undefined): UserRole {
+    return role ?? 'anonymous';
   }
 }

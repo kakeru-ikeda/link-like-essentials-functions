@@ -48,6 +48,7 @@ export class UserService {
       llid,
       displayName,
       bio,
+      role: 'anonymous',
     };
 
     // avatarUrlが指定されている場合、tmpから移動
