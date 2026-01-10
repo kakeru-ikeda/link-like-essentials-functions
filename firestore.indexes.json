@@ -288,6 +288,15 @@
       "fields": [
         { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "publishedAt", "order": "DESCENDING" }
       ]
     },
@@ -297,7 +306,25 @@
       "fields": [
         { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "viewCount", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "likeCount", "order": "ASCENDING" }
       ]
     },
     {
