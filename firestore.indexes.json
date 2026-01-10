@@ -279,6 +279,14 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "publishedAt", "order": "DESCENDING" }
       ]
