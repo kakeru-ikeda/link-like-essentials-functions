@@ -5,6 +5,7 @@ import type { User, UserRole } from '@/domain/entities/User';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   UserCreateSchema,
+  UserBatchQuerySchema,
   UserUpdateSchema,
 } from '@/presentation/middleware/validator';
 
@@ -34,6 +35,42 @@ export const toUserProfile = (user: User): UserProfile => ({
 
 export class UserController {
   constructor(private userService: UserService) {}
+
+  /**
+   * GET /users/:uid - 任意ユーザーのプロフィール取得
+   */
+  public getUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { uid } = req.params;
+      const user = await this.userService.getUserProfile(uid);
+
+      res.status(200).json({ user: toUserProfile(user) });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /users/batch - 複数ユーザーのプロフィール取得
+   */
+  public getUsersBatch = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { userIds } = UserBatchQuerySchema.parse(req.query);
+      const users = await this.userService.getUsers(userIds);
+
+      res.status(200).json({ users: users.map((user) => toUserProfile(user)) });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   /**
    * GET /users/me - 自分のプロフィール取得

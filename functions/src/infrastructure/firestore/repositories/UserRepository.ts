@@ -29,18 +29,23 @@ export class UserRepository implements IUserRepository {
       return null;
     }
 
-    const data = doc.data() as Partial<User>;
+    return this.buildUserFromDocument(doc);
+  }
 
-    return {
-      uid: doc.id,
-      llid: data.llid ?? null,
-      displayName: data.displayName as string,
-      bio: data.bio ?? null,
-      avatarUrl: data.avatarUrl ?? null,
-      role: this.resolveRole(data.role),
-      createdAt: data.createdAt as Timestamp,
-      updatedAt: data.updatedAt as Timestamp,
-    };
+  async findByUids(uids: string[]): Promise<User[]> {
+    if (uids.length === 0) {
+      return [];
+    }
+
+    const uniqueUids = Array.from(new Set(uids));
+    const docRefs = uniqueUids.map((uid) =>
+      this.firestoreClient.collection(this.COLLECTION_NAME).doc(uid)
+    );
+    const snapshots = await this.firestoreClient.getDb().getAll(...docRefs);
+
+    return snapshots
+      .filter((doc) => doc.exists)
+      .map((doc) => this.buildUserFromDocument(doc));
   }
 
   async create(input: UserCreateInput): Promise<User> {
@@ -130,6 +135,23 @@ export class UserRepository implements IUserRepository {
     }
 
     await docRef.delete();
+  }
+
+  private buildUserFromDocument(
+    doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>
+  ): User {
+    const data = doc.data() as Partial<User>;
+
+    return {
+      uid: doc.id,
+      llid: data.llid ?? null,
+      displayName: data.displayName as string,
+      bio: data.bio ?? null,
+      avatarUrl: data.avatarUrl ?? null,
+      role: this.resolveRole(data.role),
+      createdAt: data.createdAt as Timestamp,
+      updatedAt: data.updatedAt as Timestamp,
+    };
   }
 
   private resolveRole(role: UserRole | null | undefined): UserRole {

@@ -27,6 +27,8 @@ export const createUserRouter = (): Router => {
     authController.upgradeAnonymousToEmail
   );
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/users/batch', authenticate, userController.getUsersBatch);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.get('/users/me', authenticate, userController.getMyProfile);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post('/users/me', authenticate, userController.createProfile);
@@ -36,6 +38,8 @@ export const createUserRouter = (): Router => {
   router.delete('/users/me/avatar', authenticate, userController.deleteAvatar);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.delete('/users/me', authenticate, userController.deleteUser);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/users/:uid', authenticate, userController.getUser);
 
   return router;
 };
