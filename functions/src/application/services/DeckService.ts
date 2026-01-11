@@ -18,12 +18,14 @@ import {
 import type { IDeckRepository } from '@/domain/repositories/IDeckRepository';
 import type { IUserRepository } from '@/domain/repositories/IUserRepository';
 import type { DeckImageStorage } from '@/infrastructure/storage/DeckImageStorage';
+import type { NotificationService } from './NotificationService';
 
 export class DeckService {
   constructor(
     private deckRepository: IDeckRepository,
     private userRepository: IUserRepository,
-    private deckImageStorage: DeckImageStorage
+    private deckImageStorage: DeckImageStorage,
+    private notificationService: NotificationService
   ) {}
 
   /**
@@ -333,12 +335,22 @@ export class DeckService {
       createdAt: Timestamp.now(),
     });
 
-    const distinctReporters = await this.deckRepository.countDeckReportsByUsers(
-      deckId
-    );
+    await this.notificationService.notifyDeckReported({
+      deckId,
+      reportedBy: userId,
+      reason,
+      details,
+    });
+
+    const distinctReporters =
+      await this.deckRepository.countDeckReportsByUsers(deckId);
     if (distinctReporters >= 5) {
       await this.deckRepository.softDeleteDeck(deckId);
       await this.deckRepository.softDeleteCommentsByDeckId(deckId);
+      await this.notificationService.notifyDeckAutoHidden({
+        deckId,
+        distinctReports: distinctReporters,
+      });
     }
   }
 
@@ -371,10 +383,23 @@ export class DeckService {
       createdAt: Timestamp.now(),
     });
 
+    await this.notificationService.notifyCommentReported({
+      deckId,
+      commentId,
+      reportedBy: userId,
+      reason,
+      details,
+    });
+
     const distinctReporters =
       await this.deckRepository.countCommentReportsByUsers(deckId, commentId);
     if (distinctReporters >= 5) {
       await this.deckRepository.softDeleteComment(commentId);
+      await this.notificationService.notifyCommentAutoHidden({
+        deckId,
+        commentId,
+        distinctReports: distinctReporters,
+      });
     }
   }
 

@@ -95,8 +95,8 @@ export class DeckRepository implements IDeckRepository {
       baseQuery = baseQuery.where('hashtags', 'array-contains', normalizedTag);
     }
 
-    // 論理削除を除外
-    baseQuery = baseQuery.where('isDeleted', 'not-in', [true]);
+    // 論理削除を除外（!= 使用時は orderBy が必要）
+    baseQuery = baseQuery.where('isDeleted', '!=', true).orderBy('isDeleted');
 
     // 公開一覧に非表示を含めない場合はクエリ段階で除外する
     if (!includeUnlisted) {
