@@ -575,6 +575,15 @@
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "likeCount", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
     }
   ]
 }
