@@ -650,6 +650,31 @@
         { "fieldPath": "isDeleted", "order": "ASCENDING" },
         { "fieldPath": "__name__", "order": "ASCENDING" }
       ]
+    },
+    { "collectionGroup": "published_decks", "queryScope": "COLLECTION", "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    { "collectionGroup": "published_decks", "queryScope": "COLLECTION", "fields": [
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    { "collectionGroup": "published_decks", "queryScope": "COLLECTION", "fields": [
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "viewCount", "order": "DESCENDING" }
+      ]
+    },
+    { "collectionGroup": "published_decks", "queryScope": "COLLECTION", "fields": [
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
     }
   ]
 }
