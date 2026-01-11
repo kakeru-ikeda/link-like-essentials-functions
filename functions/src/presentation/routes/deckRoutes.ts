@@ -43,6 +43,18 @@ export const createDeckRouter = (): Router => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post('/decks/:id/comments', authenticate, deckController.addComment);
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.post(
+    '/decks/:id/comments/:commentId/report',
+    authenticate,
+    deckController.reportComment
+  );
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.delete(
+    '/decks/:id/comments/:commentId',
+    authenticate,
+    deckController.deleteComment
+  );
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post('/decks/:id/report', authenticate, deckController.reportDeck);
 
   return router;

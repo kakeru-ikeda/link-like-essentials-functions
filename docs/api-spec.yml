@@ -505,6 +505,68 @@ paths:
                 required: [comment]
         default:
           $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/comments/{commentId}:
+    delete:
+      tags: [Deck]
+      summary: コメント削除（論理削除）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 削除成功（レスポンスボディなし）
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /decks/{id}/comments/{commentId}/report:
+    post:
+      tags: [Deck]
+      summary: コメント通報
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeckReportRequest"
+      responses:
+        "200":
+          description: 受理
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: コメントの通報を受け付けました
+                required: [success, message]
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /decks/{id}/report:
     post:
       tags: [Deck]

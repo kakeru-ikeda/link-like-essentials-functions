@@ -41,6 +41,7 @@ export interface PublishedDeck {
   imageUrls?: string[];
   thumbnail?: string;
   isUnlisted?: boolean;
+  isDeleted?: boolean;
   viewCount: number;
   likeCount: number;
   likedByCurrentUser?: boolean;
@@ -72,6 +73,7 @@ export interface DeckComment {
   userId: string;
   userName: string;
   text: string;
+  isDeleted?: boolean;
   createdAt: Timestamp;
 }
 
@@ -83,6 +85,19 @@ export interface DeckReport {
   deckId: string;
   reportedBy: string;
   reason: 'inappropriate_content' | 'spam' | 'copyright' | 'other';
+  details?: string;
+  createdAt: Timestamp;
+}
+
+/**
+ * デッキコメント通報型
+ */
+export interface DeckCommentReport {
+  id: string;
+  deckId: string;
+  commentId: string;
+  reportedBy: string;
+  reason: DeckReport['reason'];
   details?: string;
   createdAt: Timestamp;
 }

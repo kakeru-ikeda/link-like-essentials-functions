@@ -358,6 +358,29 @@ export class DeckController {
   };
 
   /**
+   * DELETE /decks/:id/comments/:commentId - コメント削除（論理削除）
+   */
+  public deleteComment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const { id, commentId } = req.params;
+      await this.deckService.deleteComment(id, commentId, uid);
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * POST /decks/:id/report - 通報
    */
   public reportDeck = async (
@@ -383,6 +406,39 @@ export class DeckController {
       res.status(200).json({
         success: true,
         message: '通報を受け付けました',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /decks/:id/comments/:commentId/report - コメント通報
+   */
+  public reportComment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const { id, commentId } = req.params;
+      const validatedBody = DeckReportSchema.parse(req.body);
+      await this.deckService.reportComment(
+        id,
+        commentId,
+        uid,
+        validatedBody.reason,
+        validatedBody.details
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'コメントの通報を受け付けました',
       });
     } catch (error) {
       next(error);

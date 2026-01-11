@@ -2,6 +2,7 @@ import type { Timestamp } from 'firebase-admin/firestore';
 
 import type {
   DeckComment,
+  DeckCommentReport,
   DeckReport,
   GetDecksParams,
   GetLikedDecksParams,
@@ -49,6 +50,11 @@ export interface IDeckRepository {
   updateDeck(id: string, data: Partial<PublishedDeck>): Promise<void>;
 
   /**
+   * 公開デッキを論理削除
+   */
+  softDeleteDeck(id: string): Promise<void>;
+
+  /**
    * 公開デッキを削除
    */
   deleteDeck(id: string): Promise<void>;
@@ -91,11 +97,46 @@ export interface IDeckRepository {
    */
   findCommentsByDeckId(deckId: string): Promise<DeckComment[]>;
 
+  /**
+   * コメントを1件取得
+   */
+  findCommentById(commentId: string): Promise<DeckComment | null>;
+
+  /**
+   * コメントを論理削除
+   */
+  softDeleteComment(commentId: string): Promise<void>;
+
+  /**
+   * デッキ配下のコメントを論理削除
+   */
+  softDeleteCommentsByDeckId(deckId: string): Promise<void>;
+
   // ========== Report CRUD ==========
   /**
    * 通報レコードを作成
    */
   createReport(report: Omit<DeckReport, 'id'>): Promise<DeckReport>;
+
+  /**
+   * コメント通報レコードを作成
+   */
+  createCommentReport(
+    report: Omit<DeckCommentReport, 'id'>
+  ): Promise<DeckCommentReport>;
+
+  /**
+   * デッキの通報を行ったユニークユーザー数を取得
+   */
+  countDeckReportsByUsers(deckId: string): Promise<number>;
+
+  /**
+   * コメントの通報を行ったユニークユーザー数を取得
+   */
+  countCommentReportsByUsers(
+    deckId: string,
+    commentId: string
+  ): Promise<number>;
 
   // ========== Batch Operations ==========
   /**

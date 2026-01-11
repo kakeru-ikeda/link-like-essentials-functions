@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import type {
   DeckComment,
+  DeckCommentReport,
   DeckReport,
   GetDecksParams,
   GetLikedDecksParams,
@@ -20,6 +21,7 @@ export class DeckRepository implements IDeckRepository {
   private readonly DECK_VIEWS_COLLECTION = 'deck_views';
   private readonly DECK_COMMENTS_COLLECTION = 'deck_comments';
   private readonly DECK_REPORTS_COLLECTION = 'deck_reports';
+  private readonly DECK_COMMENT_REPORTS_COLLECTION = 'deck_comment_reports';
   private readonly POPULAR_HASHTAGS_COLLECTION = 'popular_hashtags';
 
   private firestoreClient: FirestoreClient;
@@ -49,7 +51,12 @@ export class DeckRepository implements IDeckRepository {
       .collection(this.PUBLISHED_DECKS_COLLECTION)
       .doc(deck.id);
 
-    await docRef.set(sanitizeForFirestore(deck));
+    await docRef.set(
+      sanitizeForFirestore({
+        isDeleted: false,
+        ...deck,
+      })
+    );
 
     return deck;
   }
@@ -88,9 +95,12 @@ export class DeckRepository implements IDeckRepository {
       baseQuery = baseQuery.where('hashtags', 'array-contains', normalizedTag);
     }
 
+    // 論理削除を除外（!= 使用時は orderBy が必要）
+    baseQuery = baseQuery.where('isDeleted', '!=', true).orderBy('isDeleted');
+
     // 公開一覧に非表示を含めない場合はクエリ段階で除外する
     if (!includeUnlisted) {
-      baseQuery = baseQuery.where('isUnlisted', '!=', true);
+      baseQuery = baseQuery.where('isUnlisted', '==', false);
     }
 
     // 総件数を取得（クエリ条件に準拠）
@@ -99,10 +109,6 @@ export class DeckRepository implements IDeckRepository {
 
     // ソート
     let query = baseQuery;
-    if (!includeUnlisted) {
-      // Firestore の不等号フィルター使用時は同一フィールドで orderBy が必要
-      query = query.orderBy('isUnlisted');
-    }
     query = query.orderBy(orderBy, order);
 
     // ページネーション
@@ -116,12 +122,15 @@ export class DeckRepository implements IDeckRepository {
         ...data,
         id: doc.id,
         isUnlisted: data.isUnlisted ?? false,
+        isDeleted: data.isDeleted ?? false,
       } as PublishedDeck;
     });
 
+    const filteredDecks = decks.filter((deck) => deck.isDeleted !== true);
+
     const visibleDecks = includeUnlisted
-      ? decks
-      : decks.filter((deck) => deck.isUnlisted !== true);
+      ? filteredDecks
+      : filteredDecks.filter((deck) => deck.isUnlisted !== true);
 
     const decksWithLikeFlag = await this.attachLikedFlag(
       visibleDecks,
@@ -204,6 +213,7 @@ export class DeckRepository implements IDeckRepository {
           likedByCurrentUser: true,
         };
       })
+      .filter((deck) => deck.isDeleted !== true)
       .sort((a, b) => {
         const orderA = orderMap.get(a.id) ?? 0;
         const orderB = orderMap.get(b.id) ?? 0;
@@ -245,6 +255,10 @@ export class DeckRepository implements IDeckRepository {
 
     const data = doc.data() as PublishedDeck;
 
+    if (data.isDeleted === true) {
+      return null;
+    }
+
     return {
       ...data,
       id: doc.id,
@@ -262,6 +276,16 @@ export class DeckRepository implements IDeckRepository {
       .doc(id);
 
     await docRef.update(sanitizeForFirestore(data));
+  }
+
+  /**
+   * 公開デッキを論理削除
+   */
+  async softDeleteDeck(id: string): Promise<void> {
+    await this.updateDeck(id, {
+      isDeleted: true,
+      updatedAt: Timestamp.now(),
+    });
   }
 
   /**
@@ -308,7 +332,7 @@ export class DeckRepository implements IDeckRepository {
       .get();
 
     commentsSnapshot.docs.forEach((doc) => {
-      batch.delete(doc.ref);
+      batch.update(doc.ref, { isDeleted: true });
     });
 
     await batch.commit();
@@ -398,6 +422,7 @@ export class DeckRepository implements IDeckRepository {
     const newComment: DeckComment = {
       ...comment,
       id: commentRef.id,
+      isDeleted: false,
     };
 
     await commentRef.set(newComment);
@@ -412,6 +437,8 @@ export class DeckRepository implements IDeckRepository {
     const snapshot = await this.firestoreClient
       .collection(this.DECK_COMMENTS_COLLECTION)
       .where('deckId', '==', deckId)
+      .where('isDeleted', '!=', true)
+      .orderBy('isDeleted')
       .orderBy('createdAt', 'desc')
       .get();
 
@@ -422,6 +449,60 @@ export class DeckRepository implements IDeckRepository {
           id: doc.id,
         }) as DeckComment
     );
+  }
+
+  /**
+   * コメントを1件取得
+   */
+  async findCommentById(commentId: string): Promise<DeckComment | null> {
+    const docRef = this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .doc(commentId);
+
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return null;
+    }
+
+    const data = doc.data() as DeckComment;
+
+    if (data.isDeleted === true) {
+      return null;
+    }
+
+    return {
+      ...data,
+      id: doc.id,
+    };
+  }
+
+  /**
+   * コメントを論理削除
+   */
+  async softDeleteComment(commentId: string): Promise<void> {
+    const commentRef = this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .doc(commentId);
+
+    await commentRef.update({ isDeleted: true });
+  }
+
+  /**
+   * デッキ配下のコメントを論理削除
+   */
+  async softDeleteCommentsByDeckId(deckId: string): Promise<void> {
+    const snapshot = await this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .get();
+
+    const batch = this.firestoreClient.batch();
+
+    snapshot.docs.forEach((doc) => {
+      batch.update(doc.ref, { isDeleted: true });
+    });
+
+    await batch.commit();
   }
 
   /**
@@ -440,6 +521,70 @@ export class DeckRepository implements IDeckRepository {
     await reportRef.set(sanitizeForFirestore(newReport));
 
     return newReport;
+  }
+
+  /**
+   * デッキの通報を行ったユニークユーザー数を取得
+   */
+  async countDeckReportsByUsers(deckId: string): Promise<number> {
+    const snapshot = await this.firestoreClient
+      .collection(this.DECK_REPORTS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .get();
+
+    const userSet = new Set<string>();
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data() as DeckReport;
+      if (data.reportedBy) {
+        userSet.add(data.reportedBy);
+      }
+    });
+
+    return userSet.size;
+  }
+
+  /**
+   * コメント通報レコードを作成
+   */
+  async createCommentReport(
+    report: Omit<DeckCommentReport, 'id'>
+  ): Promise<DeckCommentReport> {
+    const reportRef = this.firestoreClient
+      .collection(this.DECK_COMMENT_REPORTS_COLLECTION)
+      .doc();
+
+    const newReport: DeckCommentReport = {
+      ...report,
+      id: reportRef.id,
+    };
+
+    await reportRef.set(sanitizeForFirestore(newReport));
+
+    return newReport;
+  }
+
+  /**
+   * コメントの通報を行ったユニークユーザー数を取得
+   */
+  async countCommentReportsByUsers(
+    deckId: string,
+    commentId: string
+  ): Promise<number> {
+    const snapshot = await this.firestoreClient
+      .collection(this.DECK_COMMENT_REPORTS_COLLECTION)
+      .where('deckId', '==', deckId)
+      .where('commentId', '==', commentId)
+      .get();
+
+    const userSet = new Set<string>();
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data() as DeckCommentReport;
+      if (data.reportedBy) {
+        userSet.add(data.reportedBy);
+      }
+    });
+
+    return userSet.size;
   }
 
   private async attachLikedFlag(
@@ -487,6 +632,7 @@ export class DeckRepository implements IDeckRepository {
     const snapshot = await this.firestoreClient
       .collection(this.PUBLISHED_DECKS_COLLECTION)
       .where('publishedAt', '>=', since)
+      .where('isDeleted', '!=', true)
       .get();
 
     const hashtagCounts = new Map<string, number>();
