@@ -312,6 +312,18 @@ export class DeckService {
   }
 
   /**
+   * コメント一覧を取得
+   */
+  async getComments(deckId: string): Promise<DeckComment[]> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    return await this.deckRepository.findCommentsByDeckId(deckId);
+  }
+
+  /**
    * デッキを通報
    */
   async reportDeck(

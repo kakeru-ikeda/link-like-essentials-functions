@@ -55,6 +55,8 @@ export const createDeckRouter = (): Router => {
     deckController.deleteComment
   );
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  router.get('/decks/:id/comments', authenticate, deckController.getComments);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   router.post('/decks/:id/report', authenticate, deckController.reportDeck);
 
   return router;
