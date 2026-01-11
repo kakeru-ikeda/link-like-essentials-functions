@@ -88,6 +88,19 @@ export interface DeckReport {
 }
 
 /**
+ * デッキコメント通報型
+ */
+export interface DeckCommentReport {
+  id: string;
+  deckId: string;
+  commentId: string;
+  reportedBy: string;
+  reason: DeckReport['reason'];
+  details?: string;
+  createdAt: Timestamp;
+}
+
+/**
  * ページネーション情報
  */
 export interface PageInfo {

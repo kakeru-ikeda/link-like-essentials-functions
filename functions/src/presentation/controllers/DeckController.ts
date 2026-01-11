@@ -388,4 +388,37 @@ export class DeckController {
       next(error);
     }
   };
+
+  /**
+   * POST /decks/:id/comments/:commentId/report - コメント通報
+   */
+  public reportComment = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const { id, commentId } = req.params;
+      const validatedBody = DeckReportSchema.parse(req.body);
+      await this.deckService.reportComment(
+        id,
+        commentId,
+        uid,
+        validatedBody.reason,
+        validatedBody.details
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'コメントの通報を受け付けました',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

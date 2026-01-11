@@ -335,6 +335,36 @@ export class DeckService {
   }
 
   /**
+   * コメントを通報
+   */
+  async reportComment(
+    deckId: string,
+    commentId: string,
+    userId: string,
+    reason: DeckReport['reason'],
+    details?: string
+  ): Promise<void> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    const comment = await this.deckRepository.findCommentById(commentId);
+    if (!comment || comment.deckId !== deckId) {
+      throw new NotFoundError('指定されたコメントが見つかりません');
+    }
+
+    await this.deckRepository.createCommentReport({
+      deckId,
+      commentId,
+      reportedBy: userId,
+      reason,
+      details,
+      createdAt: Timestamp.now(),
+    });
+  }
+
+  /**
    * 人気ハッシュタグを集計して保存
    */
   async aggregatePopularHashtags(

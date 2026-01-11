@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 import type {
   DeckComment,
+  DeckCommentReport,
   DeckReport,
   GetDecksParams,
   GetLikedDecksParams,
@@ -20,6 +21,7 @@ export class DeckRepository implements IDeckRepository {
   private readonly DECK_VIEWS_COLLECTION = 'deck_views';
   private readonly DECK_COMMENTS_COLLECTION = 'deck_comments';
   private readonly DECK_REPORTS_COLLECTION = 'deck_reports';
+  private readonly DECK_COMMENT_REPORTS_COLLECTION = 'deck_comment_reports';
   private readonly POPULAR_HASHTAGS_COLLECTION = 'popular_hashtags';
 
   private firestoreClient: FirestoreClient;
@@ -425,6 +427,27 @@ export class DeckRepository implements IDeckRepository {
   }
 
   /**
+   * コメントを1件取得
+   */
+  async findCommentById(commentId: string): Promise<DeckComment | null> {
+    const docRef = this.firestoreClient
+      .collection(this.DECK_COMMENTS_COLLECTION)
+      .doc(commentId);
+
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return null;
+    }
+
+    const data = doc.data() as DeckComment;
+
+    return {
+      ...data,
+      id: doc.id,
+    };
+  }
+
+  /**
    * 通報レコードを作成
    */
   async createReport(report: Omit<DeckReport, 'id'>): Promise<DeckReport> {
@@ -433,6 +456,26 @@ export class DeckRepository implements IDeckRepository {
       .doc();
 
     const newReport: DeckReport = {
+      ...report,
+      id: reportRef.id,
+    };
+
+    await reportRef.set(sanitizeForFirestore(newReport));
+
+    return newReport;
+  }
+
+  /**
+   * コメント通報レコードを作成
+   */
+  async createCommentReport(
+    report: Omit<DeckCommentReport, 'id'>
+  ): Promise<DeckCommentReport> {
+    const reportRef = this.firestoreClient
+      .collection(this.DECK_COMMENT_REPORTS_COLLECTION)
+      .doc();
+
+    const newReport: DeckCommentReport = {
       ...report,
       id: reportRef.id,
     };

@@ -2,6 +2,7 @@ import type { Timestamp } from 'firebase-admin/firestore';
 
 import type {
   DeckComment,
+  DeckCommentReport,
   DeckReport,
   GetDecksParams,
   GetLikedDecksParams,
@@ -91,11 +92,23 @@ export interface IDeckRepository {
    */
   findCommentsByDeckId(deckId: string): Promise<DeckComment[]>;
 
+  /**
+   * コメントを1件取得
+   */
+  findCommentById(commentId: string): Promise<DeckComment | null>;
+
   // ========== Report CRUD ==========
   /**
    * 通報レコードを作成
    */
   createReport(report: Omit<DeckReport, 'id'>): Promise<DeckReport>;
+
+  /**
+   * コメント通報レコードを作成
+   */
+  createCommentReport(
+    report: Omit<DeckCommentReport, 'id'>
+  ): Promise<DeckCommentReport>;
 
   // ========== Batch Operations ==========
   /**
