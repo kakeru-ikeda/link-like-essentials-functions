@@ -14,6 +14,7 @@ import {
   GetLikedDecksQuerySchema,
   GetDecksQuerySchema,
   GetMyDecksQuerySchema,
+  GetCommentsQuerySchema,
 } from '@/presentation/middleware/validator';
 
 // フロントエンド向けのレスポンス型（Timestamp → ISO 8601変換済み）
@@ -372,10 +373,15 @@ export class DeckController {
       }
 
       const { id } = req.params;
-      const comments = await this.deckService.getComments(id);
+      const params = GetCommentsQuerySchema.parse(req.query);
+      const { comments, pageInfo } = await this.deckService.getComments(
+        id,
+        params
+      );
 
       res.status(200).json({
         comments: comments.map(toCommentResponse),
+        pageInfo,
       });
     } catch (error) {
       next(error);

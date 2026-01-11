@@ -5,6 +5,7 @@ import type {
   DeckCommentReport,
   DeckReport,
   GetDecksParams,
+  GetCommentsParams,
   GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
@@ -433,22 +434,45 @@ export class DeckRepository implements IDeckRepository {
   /**
    * コメント一覧を取得
    */
-  async findCommentsByDeckId(deckId: string): Promise<DeckComment[]> {
-    const snapshot = await this.firestoreClient
+  async findCommentsByDeckId(
+    deckId: string,
+    params: GetCommentsParams
+  ): Promise<{ comments: DeckComment[]; pageInfo: PageInfo }> {
+    const page = params.page || 1;
+    const perPage = Math.min(params.perPage || 20, 100);
+
+    const baseQuery = this.firestoreClient
       .collection(this.DECK_COMMENTS_COLLECTION)
       .where('deckId', '==', deckId)
       .where('isDeleted', '!=', true)
       .orderBy('isDeleted')
-      .orderBy('createdAt', 'desc')
-      .get();
+      .orderBy('createdAt', 'desc');
 
-    return snapshot.docs.map(
+    const countSnapshot = await baseQuery.count().get();
+    const totalCount = countSnapshot.data().count;
+
+    const offset = (page - 1) * perPage;
+    const snapshot = await baseQuery.offset(offset).limit(perPage).get();
+
+    const comments = snapshot.docs.map(
       (doc) =>
         ({
           ...doc.data(),
           id: doc.id,
         }) as DeckComment
     );
+
+    const totalPages = Math.ceil(totalCount / perPage);
+    const pageInfo: PageInfo = {
+      currentPage: page,
+      perPage,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1 && totalCount > 0,
+    };
+
+    return { comments, pageInfo };
   }
 
   /**
