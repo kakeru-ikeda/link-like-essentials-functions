@@ -236,6 +236,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "published_decks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "viewCount", "order": "DESCENDING" }
       ]
     },
@@ -634,6 +643,12 @@
         { "fieldPath": "hashtags", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isUnlisted", "order": "ASCENDING" },
         { "fieldPath": "likeCount", "order": "DESCENDING" }
+      ]
+    },
+    { "collectionGroup": "published_decks", "queryScope": "COLLECTION", "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "isDeleted", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
       ]
     }
   ]
