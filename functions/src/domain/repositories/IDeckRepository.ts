@@ -5,6 +5,7 @@ import type {
   DeckCommentReport,
   DeckReport,
   GetDecksParams,
+  GetCommentsParams,
   GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
@@ -95,7 +96,10 @@ export interface IDeckRepository {
   /**
    * コメント一覧を取得
    */
-  findCommentsByDeckId(deckId: string): Promise<DeckComment[]>;
+  findCommentsByDeckId(
+    deckId: string,
+    params: GetCommentsParams
+  ): Promise<{ comments: DeckComment[]; pageInfo: PageInfo }>;
 
   /**
    * コメントを1件取得

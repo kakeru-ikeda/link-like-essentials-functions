@@ -540,6 +540,23 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: 取得ページ番号
+        - in: query
+          name: perPage
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: 1ページあたり件数
       responses:
         "200":
           description: 成功
@@ -552,7 +569,9 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/DeckComment"
-                required: [comments]
+                  pageInfo:
+                    $ref: "#/components/schemas/PageInfo"
+                required: [comments, pageInfo]
         default:
           $ref: "#/components/responses/StandardErrors"
     post:

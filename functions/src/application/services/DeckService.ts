@@ -5,6 +5,7 @@ import type {
   DeckPublicationRequest,
   DeckReport,
   GetDecksParams,
+  GetCommentsParams,
   GetLikedDecksParams,
   PageInfo,
   PopularHashtag,
@@ -314,13 +315,16 @@ export class DeckService {
   /**
    * コメント一覧を取得
    */
-  async getComments(deckId: string): Promise<DeckComment[]> {
+  async getComments(
+    deckId: string,
+    params: GetCommentsParams
+  ): Promise<{ comments: DeckComment[]; pageInfo: PageInfo }> {
     const deck = await this.deckRepository.findPublishedDeckById(deckId);
     if (!deck) {
       throw new NotFoundError('指定されたデッキが見つかりません');
     }
 
-    return await this.deckRepository.findCommentsByDeckId(deckId);
+    return await this.deckRepository.findCommentsByDeckId(deckId, params);
   }
 
   /**

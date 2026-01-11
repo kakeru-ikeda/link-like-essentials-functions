@@ -148,3 +148,8 @@ export interface GetLikedDecksParams {
   page?: number;
   perPage?: number;
 }
+
+export interface GetCommentsParams {
+  page?: number;
+  perPage?: number;
+}
