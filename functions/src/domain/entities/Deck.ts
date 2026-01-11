@@ -41,6 +41,7 @@ export interface PublishedDeck {
   imageUrls?: string[];
   thumbnail?: string;
   isUnlisted?: boolean;
+  isDeleted?: boolean;
   viewCount: number;
   likeCount: number;
   likedByCurrentUser?: boolean;
@@ -72,6 +73,7 @@ export interface DeckComment {
   userId: string;
   userName: string;
   text: string;
+  isDeleted?: boolean;
   createdAt: Timestamp;
 }
 

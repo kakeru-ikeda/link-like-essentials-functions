@@ -185,10 +185,10 @@ export class DeckService {
         .catch(console.error);
     }
 
-    // デッキを削除
-    await this.deckRepository.deleteDeck(id);
+    // デッキを論理削除
+    await this.deckRepository.softDeleteDeck(id);
 
-    // 関連データも削除（いいね、閲覧、コメント）
+    // 関連データも処理（いいね/閲覧は削除、コメントは論理削除）
     await this.deckRepository.deleteDeckRelatedData(id);
   }
 
@@ -332,6 +332,14 @@ export class DeckService {
       details,
       createdAt: Timestamp.now(),
     });
+
+    const distinctReporters = await this.deckRepository.countDeckReportsByUsers(
+      deckId
+    );
+    if (distinctReporters >= 5) {
+      await this.deckRepository.softDeleteDeck(deckId);
+      await this.deckRepository.softDeleteCommentsByDeckId(deckId);
+    }
   }
 
   /**
@@ -362,6 +370,37 @@ export class DeckService {
       details,
       createdAt: Timestamp.now(),
     });
+
+    const distinctReporters =
+      await this.deckRepository.countCommentReportsByUsers(deckId, commentId);
+    if (distinctReporters >= 5) {
+      await this.deckRepository.softDeleteComment(commentId);
+    }
+  }
+
+  /**
+   * コメントを削除（論理削除）
+   */
+  async deleteComment(
+    deckId: string,
+    commentId: string,
+    userId: string
+  ): Promise<void> {
+    const deck = await this.deckRepository.findPublishedDeckById(deckId);
+    if (!deck) {
+      throw new NotFoundError('指定されたデッキが見つかりません');
+    }
+
+    const comment = await this.deckRepository.findCommentById(commentId);
+    if (!comment || comment.deckId !== deckId) {
+      throw new NotFoundError('指定されたコメントが見つかりません');
+    }
+
+    if (comment.userId !== userId) {
+      throw new ForbiddenError('このコメントを削除する権限がありません');
+    }
+
+    await this.deckRepository.softDeleteComment(commentId);
   }
 
   /**

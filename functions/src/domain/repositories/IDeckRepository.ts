@@ -50,6 +50,11 @@ export interface IDeckRepository {
   updateDeck(id: string, data: Partial<PublishedDeck>): Promise<void>;
 
   /**
+   * 公開デッキを論理削除
+   */
+  softDeleteDeck(id: string): Promise<void>;
+
+  /**
    * 公開デッキを削除
    */
   deleteDeck(id: string): Promise<void>;
@@ -97,6 +102,16 @@ export interface IDeckRepository {
    */
   findCommentById(commentId: string): Promise<DeckComment | null>;
 
+  /**
+   * コメントを論理削除
+   */
+  softDeleteComment(commentId: string): Promise<void>;
+
+  /**
+   * デッキ配下のコメントを論理削除
+   */
+  softDeleteCommentsByDeckId(deckId: string): Promise<void>;
+
   // ========== Report CRUD ==========
   /**
    * 通報レコードを作成
@@ -109,6 +124,19 @@ export interface IDeckRepository {
   createCommentReport(
     report: Omit<DeckCommentReport, 'id'>
   ): Promise<DeckCommentReport>;
+
+  /**
+   * デッキの通報を行ったユニークユーザー数を取得
+   */
+  countDeckReportsByUsers(deckId: string): Promise<number>;
+
+  /**
+   * コメントの通報を行ったユニークユーザー数を取得
+   */
+  countCommentReportsByUsers(
+    deckId: string,
+    commentId: string
+  ): Promise<number>;
 
   // ========== Batch Operations ==========
   /**
