@@ -12,6 +12,35 @@ servers:
 security:
   - bearerAuth: []
 paths:
+  /users/batch:
+    get:
+      tags: [User]
+      summary: 複数ユーザーのプロフィール取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userIds
+          required: true
+          schema:
+            type: string
+            example: uid1,uid2,uid3
+          description: 取得したいユーザーのUIDをカンマ区切りで指定。最大50件まで。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserProfile"
+                required: [users]
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /users/me:
     get:
       tags: [User]
@@ -98,6 +127,31 @@ paths:
       responses:
         "204":
           description: 削除成功（レスポンスボディなし）
+        default:
+          $ref: "#/components/responses/StandardErrors"
+  /users/{uid}:
+    get:
+      tags: [User]
+      summary: 任意ユーザーのプロフィール取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uid
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+                required: [user]
         default:
           $ref: "#/components/responses/StandardErrors"
   /users/me/avatar:

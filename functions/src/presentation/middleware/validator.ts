@@ -34,6 +34,24 @@ export const UserUpdateSchema = z.object({
   avatarUrl: tmpAvatarUrlSchema.optional(),
 });
 
+export const UserBatchQuerySchema = z.object({
+  userIds: z
+    .string()
+    .min(1)
+    .transform((value) =>
+      value
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0)
+    )
+    .refine((ids) => ids.length > 0, {
+      message: 'userIdsは1件以上指定してください',
+    })
+    .refine((ids) => ids.length <= 50, {
+      message: 'userIdsは最大50件まで指定できます',
+    }),
+});
+
 export const AuthUpgradeEmailSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),

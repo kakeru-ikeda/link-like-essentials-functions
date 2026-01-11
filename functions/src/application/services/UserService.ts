@@ -14,9 +14,9 @@ export class UserService {
   ) {}
 
   /**
-   * 自分のプロフィールを取得
+   * 任意ユーザーのプロフィールを取得
    */
-  async getMyProfile(uid: string): Promise<User> {
+  async getUserProfile(uid: string): Promise<User> {
     const user = await this.userRepository.findByUid(uid);
 
     if (!user) {
@@ -24,6 +24,13 @@ export class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * 自分のプロフィールを取得
+   */
+  async getMyProfile(uid: string): Promise<User> {
+    return await this.getUserProfile(uid);
   }
 
   /**
@@ -152,5 +159,23 @@ export class UserService {
 
     // ユーザーデータを削除
     await this.userRepository.delete(uid);
+  }
+
+  /**
+   * 複数ユーザーのプロフィールを取得
+   */
+  async getUsers(uids: string[]): Promise<User[]> {
+    const uniqueUids = Array.from(new Set(uids));
+
+    if (uniqueUids.length === 0) {
+      return [];
+    }
+
+    const users = await this.userRepository.findByUids(uniqueUids);
+    const userMap = new Map(users.map((user) => [user.uid, user]));
+
+    return uniqueUids
+      .map((uid) => userMap.get(uid))
+      .filter((user): user is User => Boolean(user));
   }
 }
