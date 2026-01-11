@@ -475,6 +475,32 @@ paths:
         default:
           $ref: "#/components/responses/StandardErrors"
   /decks/{id}/comments:
+    get:
+      tags: [Deck]
+      summary: コメント一覧取得
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DeckComment"
+                required: [comments]
+        default:
+          $ref: "#/components/responses/StandardErrors"
     post:
       tags: [Deck]
       summary: コメント追加

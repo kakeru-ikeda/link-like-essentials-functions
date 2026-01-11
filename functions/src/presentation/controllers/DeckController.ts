@@ -358,6 +358,31 @@ export class DeckController {
   };
 
   /**
+   * GET /decks/:id/comments - コメント一覧取得
+   */
+  public getComments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const uid = (req as AuthRequest).user?.uid;
+      if (!uid) {
+        throw new Error('認証情報が不正です');
+      }
+
+      const { id } = req.params;
+      const comments = await this.deckService.getComments(id);
+
+      res.status(200).json({
+        comments: comments.map(toCommentResponse),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * DELETE /decks/:id/comments/:commentId - コメント削除（論理削除）
    */
   public deleteComment = async (
