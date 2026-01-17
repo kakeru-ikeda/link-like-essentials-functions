@@ -89,7 +89,7 @@ export class DeckService {
       id: request.id,
       deck: request.deck,
       userId,
-      userName: user.displayName,
+      userProfile: user,
       comment: request.comment,
       hashtags: request.hashtags || [],
       imageUrls: movedImageUrls,
