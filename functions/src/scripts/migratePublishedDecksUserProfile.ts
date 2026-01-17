@@ -5,14 +5,14 @@
  * 実行前に必ずバックアップを取得してください。
  *
  * 実行方法:
- * 
+ *
  * 【エミュレータで実行】
  * プロジェクトルートの .env ファイルに以下を設定:
  *   FIRESTORE_EMULATOR_HOST=localhost:8080
  *   GCLOUD_PROJECT=link-like-essentials
  * cd functions
  * npm run migrate:user-profile
- * 
+ *
  * 【本番環境で実行】
  * export GOOGLE_APPLICATION_CREDENTIALS="/path/to/serviceAccountKey.json"
  * export FIREBASE_PROJECT_ID="your-project-id"
@@ -36,30 +36,39 @@ interface OldPublishedDeck {
 
 const main = async (): Promise<void> => {
   console.log('=== published_decks データ移行スクリプト開始 ===');
-  console.log('userName フィールドを削除し、userProfile オブジェクトを追加します。\n');
+  console.log(
+    'userName フィールドを削除し、userProfile オブジェクトを追加します。\n'
+  );
 
   // 環境チェック
   const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT;
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT;
   const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
   if (emulatorHost) {
     console.log(`🧪 エミュレータモード: ${emulatorHost}\n`);
   } else {
     console.log('🌐 本番環境モード\n');
-    
+
     if (!projectId && !credentialsPath) {
-      console.error('❌ エラー: Firebase プロジェクトの認証情報が設定されていません。\n');
+      console.error(
+        '❌ エラー: Firebase プロジェクトの認証情報が設定されていません。\n'
+      );
       console.error('以下のいずれかの方法で設定してください:\n');
       console.error('1. エミュレータを使用する場合:');
       console.error('   export FIRESTORE_EMULATOR_HOST="localhost:8080"\n');
       console.error('2. 本番環境を使用する場合:');
-      console.error('   export GOOGLE_APPLICATION_CREDENTIALS="/path/to/serviceAccountKey.json"');
+      console.error(
+        '   export GOOGLE_APPLICATION_CREDENTIALS="/path/to/serviceAccountKey.json"'
+      );
       console.error('   export FIREBASE_PROJECT_ID="your-project-id"\n');
-      console.error('詳細: https://cloud.google.com/docs/authentication/getting-started');
+      console.error(
+        '詳細: https://cloud.google.com/docs/authentication/getting-started'
+      );
       process.exit(1);
     }
-    
+
     console.log(`プロジェクトID: ${projectId || '(自動検出)'}`);
     console.log(`認証情報: ${credentialsPath || '(デフォルト認証)'}\n`);
   }
@@ -116,7 +125,9 @@ const main = async (): Promise<void> => {
       const userDoc = await usersRef.doc(data.userId).get();
 
       if (!userDoc.exists) {
-        console.error(`[ERROR] ${deckId}: ユーザー ${data.userId} が見つかりません`);
+        console.error(
+          `[ERROR] ${deckId}: ユーザー ${data.userId} が見つかりません`
+        );
         errors.push({
           deckId,
           error: `ユーザー ${data.userId} が見つかりません`,
