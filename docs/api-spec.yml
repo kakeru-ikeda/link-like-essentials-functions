@@ -888,8 +888,8 @@ components:
           $ref: "#/components/schemas/DeckForCloud"
         userId:
           type: string
-        userName:
-          type: string
+        userProfile:
+          $ref: "#/components/schemas/UserProfile"
         comment:
           type: string
         hashtags:
@@ -924,7 +924,7 @@ components:
         - id
         - deck
         - userId
-        - userName
+        - userProfile
         - hashtags
         - viewCount
         - likeCount

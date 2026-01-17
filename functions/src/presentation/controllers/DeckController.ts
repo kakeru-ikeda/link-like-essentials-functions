@@ -6,6 +6,7 @@ import type {
   PopularHashtag,
   PublishedDeck,
 } from '@/domain/entities/Deck';
+import type { User } from '@/domain/entities/User';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
 import {
   DeckCommentSchema,
@@ -22,7 +23,7 @@ interface PublishedDeckResponse {
   id: string;
   deck: PublishedDeck['deck'];
   userId: string;
-  userName: string;
+  userProfile: User;
   comment?: string;
   hashtags: string[];
   imageUrls?: string[];
@@ -55,7 +56,7 @@ const toPublishedDeckResponse = (
   id: deck.id,
   deck: deck.deck,
   userId: deck.userId,
-  userName: deck.userName,
+  userProfile: deck.userProfile,
   comment: deck.comment,
   hashtags: deck.hashtags,
   imageUrls: deck.imageUrls,

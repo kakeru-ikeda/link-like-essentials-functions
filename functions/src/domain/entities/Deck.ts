@@ -1,4 +1,5 @@
 import type { Timestamp } from 'firebase-admin/firestore';
+import type { User } from '@/domain/entities/User';
 
 /**
  * デッキスロット（クラウド用）
@@ -35,7 +36,7 @@ export interface PublishedDeck {
   id: string;
   deck: DeckForCloud;
   userId: string;
-  userName: string;
+  userProfile: User;
   comment?: string;
   hashtags: string[];
   imageUrls?: string[];

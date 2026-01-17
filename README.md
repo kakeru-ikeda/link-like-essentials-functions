@@ -31,6 +31,13 @@ npm run serve
 npm run deploy
 ```
 
+## ドキュメント
+
+- [エミュレータ使用ガイド](docs/EMULATOR_GUIDE.md)
+- [GitHub Actions セットアップ](docs/GITHUB_ACTIONS_SETUP.md)
+- [データ移行ガイド (userProfile)](docs/MIGRATION_USER_PROFILE.md)
+- [API 仕様](docs/api-spec.yml)
+
 ## プロジェクト構造
 
 ```
