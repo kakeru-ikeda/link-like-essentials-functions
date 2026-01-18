@@ -22,7 +22,6 @@ import {
 interface PublishedDeckResponse {
   id: string;
   deck: PublishedDeckApiResponse['deck'];
-  userId: string;
   userProfile: User;
   comment?: string;
   hashtags: string[];
@@ -55,7 +54,6 @@ const toPublishedDeckResponse = (
 ): PublishedDeckResponse => ({
   id: deck.id,
   deck: deck.deck,
-  userId: deck.userId,
   userProfile: deck.userProfile,
   comment: deck.comment,
   hashtags: deck.hashtags,
