@@ -36,7 +36,6 @@ export interface PublishedDeck {
   id: string;
   deck: DeckForCloud;
   userId: string;
-  userProfile: User;
   comment?: string;
   hashtags: string[];
   imageUrls?: string[];
@@ -49,6 +48,17 @@ export interface PublishedDeck {
   publishedAt: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+/**
+ * 公開済みデッキ型（User情報付き）
+ * APIレスポンス用（userIdはuserProfile.uidで参照可能なため除外）
+ */
+export interface PublishedDeckApiResponse extends Omit<
+  PublishedDeck,
+  'userId'
+> {
+  userProfile: User;
 }
 
 /**

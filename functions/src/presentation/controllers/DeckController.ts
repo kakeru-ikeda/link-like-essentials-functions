@@ -4,7 +4,7 @@ import type { DeckService } from '@/application/services/DeckService';
 import type {
   DeckComment,
   PopularHashtag,
-  PublishedDeck,
+  PublishedDeckApiResponse,
 } from '@/domain/entities/Deck';
 import type { User } from '@/domain/entities/User';
 import type { AuthRequest } from '@/presentation/middleware/authMiddleware';
@@ -21,8 +21,7 @@ import {
 // フロントエンド向けのレスポンス型（Timestamp → ISO 8601変換済み）
 interface PublishedDeckResponse {
   id: string;
-  deck: PublishedDeck['deck'];
-  userId: string;
+  deck: PublishedDeckApiResponse['deck'];
   userProfile: User;
   comment?: string;
   hashtags: string[];
@@ -51,11 +50,10 @@ interface PopularHashtagsResponse {
 
 // Timestamp変換ヘルパー
 const toPublishedDeckResponse = (
-  deck: PublishedDeck
+  deck: PublishedDeckApiResponse
 ): PublishedDeckResponse => ({
   id: deck.id,
   deck: deck.deck,
-  userId: deck.userId,
   userProfile: deck.userProfile,
   comment: deck.comment,
   hashtags: deck.hashtags,

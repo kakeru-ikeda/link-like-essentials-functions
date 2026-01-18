@@ -886,10 +886,6 @@ components:
           type: string
         deck:
           $ref: "#/components/schemas/DeckForCloud"
-        userId:
-          type: string
-        userProfile:
-          $ref: "#/components/schemas/UserProfile"
         comment:
           type: string
         hashtags:
@@ -920,10 +916,12 @@ components:
         publishedAt:
           type: string
           format: date-time
+        userProfile:
+          $ref: "#/components/schemas/UserProfile"
+          description: "API返却時にuserIdから取得して付与される完全なユーザー情報（uid, createdAt, updatedAtを含む）。Firestoreのpublished_decksコレクションにはuserIdのみが保存され、userProfileフィールドは保存されない。"
       required:
         - id
         - deck
-        - userId
         - userProfile
         - hashtags
         - viewCount
