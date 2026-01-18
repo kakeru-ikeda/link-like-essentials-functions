@@ -50,7 +50,7 @@ interface PopularHashtagsResponse {
 
 // Timestamp変換ヘルパー
 const toPublishedDeckResponse = (
-  deck: PublishedDeckApiResponse  
+  deck: PublishedDeckApiResponse
 ): PublishedDeckResponse => ({
   id: deck.id,
   deck: deck.deck,

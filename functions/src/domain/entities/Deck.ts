@@ -54,7 +54,10 @@ export interface PublishedDeck {
  * 公開済みデッキ型（User情報付き）
  * APIレスポンス用（userIdはuserProfile.uidで参照可能なため除外）
  */
-export interface PublishedDeckApiResponse extends Omit<PublishedDeck, 'userId'> {
+export interface PublishedDeckApiResponse extends Omit<
+  PublishedDeck,
+  'userId'
+> {
   userProfile: User;
 }
 

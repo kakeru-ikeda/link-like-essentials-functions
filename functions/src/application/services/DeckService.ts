@@ -36,7 +36,7 @@ export class DeckService {
   async publishDeck(
     request: DeckPublicationRequest,
     userId: string
-  ): Promise<PublishedDeckApiResponse > {
+  ): Promise<PublishedDeckApiResponse> {
     const now = Timestamp.now();
 
     // ユーザー情報取得
@@ -104,7 +104,7 @@ export class DeckService {
 
     // 保存
     const savedDeck = await this.deckRepository.saveDeck(publishedDeckData);
-    
+
     // user情報を付与して返す
     return {
       ...savedDeck,
@@ -119,7 +119,10 @@ export class DeckService {
     params: GetDecksParams,
     currentUserId: string
   ): Promise<{ decks: PublishedDeckApiResponse[]; pageInfo: PageInfo }> {
-    const result = await this.deckRepository.findPublishedDecks(params, currentUserId);
+    const result = await this.deckRepository.findPublishedDecks(
+      params,
+      currentUserId
+    );
     const decks = await this.enrichDecksWithUserProfiles(result.decks);
     return { decks, pageInfo: result.pageInfo };
   }
@@ -138,7 +141,7 @@ export class DeckService {
       currentUserId,
       { includeUnlisted: true }
     );
-    
+
     const decks = await this.enrichDecksWithUserProfiles(result.decks);
     return { decks, pageInfo: result.pageInfo };
   }
@@ -154,7 +157,7 @@ export class DeckService {
       currentUserId,
       params
     );
-    
+
     const decks = await this.enrichDecksWithUserProfiles(result.decks);
     return { decks, pageInfo: result.pageInfo };
   }
@@ -173,13 +176,13 @@ export class DeckService {
     if (!deck) {
       throw new NotFoundError('指定されたデッキが見つかりません');
     }
-    
+
     // ユーザー情報を取得
     const user = await this.userRepository.findByUid(deck.userId);
     if (!user) {
       throw new NotFoundError('ユーザーが見つかりません');
     }
-    
+
     return {
       ...deck,
       userProfile: user,
@@ -522,18 +525,24 @@ export class DeckService {
     }
 
     // ユーザーIDを抽出（純粋関数）
-    const extractUniqueUserIds = (decks: PublishedDeck[]) =>
-      Array.from(new Set(decks.map(deck => deck.userId)));
+    const extractUniqueUserIds = (decks: PublishedDeck[]): string[] =>
+      Array.from(new Set(decks.map((deck) => deck.userId)));
 
     // パイプライン実行
     const userIds = extractUniqueUserIds(decks);
     const users = await this.userRepository.findByUids(userIds);
-    const userMap = new Map(users.map(user => [user.uid, user]));
+    const userMap = new Map(users.map((user) => [user.uid, user]));
 
     // デッキにユーザー情報を付与
-    return decks.map(deck => ({
-      ...deck,
-      userProfile: userMap.get(deck.userId)!,
-    }));
+    return decks.map((deck) => {
+      const userProfile = userMap.get(deck.userId);
+      if (!userProfile) {
+        throw new Error(`User not found for userId: ${deck.userId}`);
+      }
+      return {
+        ...deck,
+        userProfile,
+      };
+    });
   }
 }
