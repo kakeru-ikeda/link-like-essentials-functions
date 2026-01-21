@@ -92,7 +92,13 @@ const DECK_SLOT_MAPPING_105: DeckSlotMapping[] = [
   { slotId: 3, characterName: '桂城泉', slotType: 'side', row: 0, col: 4 },
   { slotId: 4, characterName: 'フリー', slotType: 'side', row: 0, col: 5 },
   { slotId: 5, characterName: 'フリー', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: '百生吟子', slotType: 'main', row: 1, col: 0 },
   { slotId: 7, characterName: '百生吟子', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: '徒町小鈴', slotType: 'main', row: 1, col: 2 },
@@ -114,7 +120,13 @@ const DECK_SLOT_MAPPING_104: DeckSlotMapping[] = [
   { slotId: 3, characterName: '徒町小鈴', slotType: 'side', row: 0, col: 4 },
   { slotId: 4, characterName: '安養寺姫芽', slotType: 'main', row: 0, col: 5 },
   { slotId: 5, characterName: '安養寺姫芽', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: '日野下花帆', slotType: 'main', row: 1, col: 0 },
   { slotId: 7, characterName: '日野下花帆', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: '村野さやか', slotType: 'main', row: 1, col: 2 },
@@ -139,7 +151,13 @@ const DECK_SLOT_MAPPING_103: DeckSlotMapping[] = [
   { slotId: 6, characterName: '大沢瑠璃乃', slotType: 'main', row: 0, col: 7 },
   { slotId: 7, characterName: '大沢瑠璃乃', slotType: 'side', row: 0, col: 8 },
   { slotId: 8, characterName: '大沢瑠璃乃', slotType: 'side', row: 0, col: 9 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 9, characterName: '乙宗梢', slotType: 'main', row: 2, col: 0 },
   { slotId: 10, characterName: '乙宗梢', slotType: 'side', row: 2, col: 1 },
   { slotId: 11, characterName: '乙宗梢', slotType: 'side', row: 2, col: 2 },
@@ -158,7 +176,13 @@ const DECK_SLOT_MAPPING_102: DeckSlotMapping[] = [
   { slotId: 3, characterName: '夕霧綴理', slotType: 'side', row: 0, col: 4 },
   { slotId: 4, characterName: '藤島慈', slotType: 'main', row: 0, col: 5 },
   { slotId: 5, characterName: '藤島慈', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: 'フリー', slotType: 'side', row: 1, col: 0 },
   { slotId: 7, characterName: 'フリー', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: 'フリー', slotType: 'side', row: 1, col: 2 },
@@ -180,7 +204,13 @@ const DECK_SLOT_MAPPING_105_FT_KOZUE: DeckSlotMapping[] = [
   { slotId: 5, characterName: '桂城泉', slotType: 'side', row: 0, col: 4 },
   { slotId: 2, characterName: 'セラス', slotType: 'main', row: 0, col: 5 },
   { slotId: 3, characterName: 'セラス', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: '百生吟子', slotType: 'main', row: 1, col: 0 },
   { slotId: 7, characterName: '百生吟子', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: '徒町小鈴', slotType: 'main', row: 1, col: 2 },
@@ -202,7 +232,13 @@ const DECK_SLOT_MAPPING_105_FT_TSUZURI: DeckSlotMapping[] = [
   { slotId: 5, characterName: '桂城泉', slotType: 'side', row: 0, col: 4 },
   { slotId: 2, characterName: 'セラス', slotType: 'main', row: 0, col: 5 },
   { slotId: 3, characterName: 'セラス', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: '百生吟子', slotType: 'main', row: 1, col: 0 },
   { slotId: 7, characterName: '百生吟子', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: '徒町小鈴', slotType: 'main', row: 1, col: 2 },
@@ -224,7 +260,13 @@ const DECK_SLOT_MAPPING_105_FT_MEGUMI: DeckSlotMapping[] = [
   { slotId: 5, characterName: '桂城泉', slotType: 'side', row: 0, col: 4 },
   { slotId: 2, characterName: 'セラス', slotType: 'main', row: 0, col: 5 },
   { slotId: 3, characterName: 'セラス', slotType: 'side', row: 0, col: 6 },
-  { slotId: FRIEND_SLOT_ID, characterName: 'フレンド', slotType: 'side', row: 0, col: 0 },
+  {
+    slotId: FRIEND_SLOT_ID,
+    characterName: 'フレンド',
+    slotType: 'side',
+    row: 0,
+    col: 0,
+  },
   { slotId: 6, characterName: '百生吟子', slotType: 'main', row: 1, col: 0 },
   { slotId: 7, characterName: '百生吟子', slotType: 'side', row: 1, col: 1 },
   { slotId: 8, characterName: '徒町小鈴', slotType: 'main', row: 1, col: 2 },
@@ -263,21 +305,106 @@ const getDeckSlotMapping = (deckType?: string): DeckSlotMapping[] => {
 const getDeckFrame = (deckType?: string): CharacterName[] => {
   switch (deckType) {
     case '102期':
-      return ['乙宗梢', '夕霧綴理', '藤島慈', 'フレンド', 'フリー', 'フリー', 'フリー', 'フリー', 'フリー', 'フリー'];
+      return [
+        '乙宗梢',
+        '夕霧綴理',
+        '藤島慈',
+        'フレンド',
+        'フリー',
+        'フリー',
+        'フリー',
+        'フリー',
+        'フリー',
+        'フリー',
+      ];
     case '103期':
-      return ['日野下花帆', '村野さやか', '大沢瑠璃乃', 'フレンド', '乙宗梢', '夕霧綴理', '藤島慈'];
+      return [
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+        'フレンド',
+        '乙宗梢',
+        '夕霧綴理',
+        '藤島慈',
+      ];
     case '104期':
-      return ['百生吟子', '徒町小鈴', '安養寺姫芽', 'フレンド', '日野下花帆', '村野さやか', '大沢瑠璃乃', '乙宗梢', '夕霧綴理', '藤島慈'];
+      return [
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        'フレンド',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+        '乙宗梢',
+        '夕霧綴理',
+        '藤島慈',
+      ];
     case '105期':
-      return ['セラス', '桂城泉', 'フリー', 'フレンド', '百生吟子', '徒町小鈴', '安養寺姫芽', '日野下花帆', '村野さやか', '大沢瑠璃乃'];
+      return [
+        'セラス',
+        '桂城泉',
+        'フリー',
+        'フレンド',
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+      ];
     case '105期ft.梢':
-      return ['乙宗梢', '桂城泉', 'セラス', 'フレンド', '百生吟子', '徒町小鈴', '安養寺姫芽', '日野下花帆', '村野さやか', '大沢瑠璃乃'];
+      return [
+        '乙宗梢',
+        '桂城泉',
+        'セラス',
+        'フレンド',
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+      ];
     case '105期ft.綴理':
-      return ['夕霧綴理', '桂城泉', 'セラス', 'フレンド', '百生吟子', '徒町小鈴', '安養寺姫芽', '日野下花帆', '村野さやか', '大沢瑠璃乃'];
+      return [
+        '夕霧綴理',
+        '桂城泉',
+        'セラス',
+        'フレンド',
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+      ];
     case '105期ft.慈':
-      return ['藤島慈', '桂城泉', 'セラス', 'フレンド', '百生吟子', '徒町小鈴', '安養寺姫芽', '日野下花帆', '村野さやか', '大沢瑠璃乃'];
+      return [
+        '藤島慈',
+        '桂城泉',
+        'セラス',
+        'フレンド',
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+      ];
     default:
-      return ['セラス', '桂城泉', 'フリー', 'フレンド', '百生吟子', '徒町小鈴', '安養寺姫芽', '日野下花帆', '村野さやか', '大沢瑠璃乃'];
+      return [
+        'セラス',
+        '桂城泉',
+        'フリー',
+        'フレンド',
+        '百生吟子',
+        '徒町小鈴',
+        '安養寺姫芽',
+        '日野下花帆',
+        '村野さやか',
+        '大沢瑠璃乃',
+      ];
   }
 };
 
@@ -314,9 +441,7 @@ const buildCharacterGroups = (
   characterFrame: CharacterName[]
 ): CharacterGroup[] => {
   const cardMap = new Map(cards.map((card) => [card.id, card]));
-  const deckSlotMap = new Map(
-    deck.slots.map((slot) => [slot.slotId, slot])
-  );
+  const deckSlotMap = new Map(deck.slots.map((slot) => [slot.slotId, slot]));
 
   const mappingByCharacter = new Map<CharacterName, DeckSlotMapping[]>();
   slotMapping.forEach((mapping) => {
@@ -350,7 +475,9 @@ const buildCharacterGroups = (
           cardId: null,
           limitBreak: 14,
         };
-        const card = deckSlot.cardId ? cardMap.get(deckSlot.cardId) ?? null : null;
+        const card = deckSlot.cardId
+          ? (cardMap.get(deckSlot.cardId) ?? null)
+          : null;
         return { slot: deckSlot, card, mapping };
       });
 
@@ -406,15 +533,18 @@ const buildHTML = (deck: ThumbnailDeck, cards: ThumbnailCard[]): string => {
   const slotMapping = getDeckSlotMapping(deck.deckType);
   const characterFrame = getDeckFrame(deck.deckType);
 
-  let filteredCharacterFrame = deck.isFriendSlotEnabled === false
-    ? characterFrame.filter((character) => character !== 'フレンド')
-    : characterFrame;
+  let filteredCharacterFrame =
+    deck.isFriendSlotEnabled === false
+      ? characterFrame.filter((character) => character !== 'フレンド')
+      : characterFrame;
 
   if (deck.isFriendSlotEnabled !== false) {
     const friendIndex = filteredCharacterFrame.indexOf('フレンド');
     if (friendIndex !== -1) {
       filteredCharacterFrame = [
-        ...filteredCharacterFrame.filter((character) => character !== 'フレンド'),
+        ...filteredCharacterFrame.filter(
+          (character) => character !== 'フレンド'
+        ),
         'フレンド',
       ];
     }
@@ -441,14 +571,15 @@ const buildHTML = (deck: ThumbnailDeck, cards: ThumbnailCard[]): string => {
       const bgColor = getCharacterBackgroundColor(group.character, 0.5);
       const charColor = getCharacterColor(group.character);
 
-      const badgesHTML = isCenter || isSinger
-        ? `
+      const badgesHTML =
+        isCenter || isSinger
+          ? `
           <div class="badge-area">
             ${isCenter ? '<div class="vertical-badge center-badge">センター</div>' : ''}
             ${isSinger && !isCenter ? '<div class="vertical-badge singer-badge">歌唱</div>' : ''}
           </div>
         `
-        : '';
+          : '';
 
       const mainSlot = group.slots[0];
       const subSlots = group.slots.slice(1);
@@ -776,7 +907,10 @@ export class ThumbnailService {
         deviceScaleFactor: 1,
       });
 
-      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+      await page.setContent(html, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+      });
 
       await page.waitForFunction(
         `Array.from(document.querySelectorAll('img')).every(img => img.complete && img.naturalHeight > 0)`,
