@@ -10,6 +10,7 @@ import { initializeFirebase } from '@/config/firebase';
 import { errorHandler } from '@/presentation/middleware/errorHandler';
 import { createDeckService } from '@/presentation/factories/deckServiceFactory';
 import { createDeckRouter } from '@/presentation/routes/deckRoutes';
+import { createThumbnailRouter } from '@/presentation/routes/thumbnailRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
 import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 
@@ -45,6 +46,7 @@ const deckApp = express();
 deckApp.use(cors({ origin: true }));
 deckApp.use(express.json());
 deckApp.use('/', createDeckRouter());
+deckApp.use('/', createThumbnailRouter());
 deckApp.use(errorHandler);
 
 // Cloud Functions Export

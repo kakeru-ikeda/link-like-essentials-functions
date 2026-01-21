@@ -81,6 +81,35 @@ const DeckForCloudSchema = z.object({
   memo: z.string().optional(),
 });
 
+// サムネイル生成用のデッキスキーマ
+const ThumbnailDeckSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(255),
+  slots: z.array(DeckSlotForCloudSchema).min(18).max(19),
+  aceSlotId: z.number().int().min(0).max(99).nullable(),
+  deckType: z.string().optional(),
+  centerCharacter: z.string().optional(),
+  participations: z.array(z.string()).optional(),
+  isFriendSlotEnabled: z.boolean().optional(),
+});
+
+const ThumbnailCardSchema = z.object({
+  id: z.string().min(1),
+  cardName: z.string().min(1),
+  characterName: z.string().min(1),
+  rarity: z.enum(['UR', 'SR', 'R', 'DR', 'BR', 'LR']),
+  detail: z
+    .object({
+      awakeAfterStorageUrl: z.string().url().optional(),
+    })
+    .optional(),
+});
+
+export const GenerateThumbnailSchema = z.object({
+  deck: ThumbnailDeckSchema,
+  cards: z.array(ThumbnailCardSchema).max(18),
+});
+
 // tmp 配下のデッキ画像/サムネイル URL 用スキーマ
 const tmpDeckAssetUrlSchema = createTmpStorageUrlSchema('画像URL');
 
