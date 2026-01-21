@@ -451,6 +451,27 @@ paths:
                 required: [publishedDeck]
         default:
           $ref: "#/components/responses/StandardErrors"
+  /thumbnails/generate:
+    post:
+      tags: [Thumbnail]
+      summary: デッキサムネイル生成
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateThumbnailRequest"
+      responses:
+        "200":
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateThumbnailResponse"
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /decks/{id}/like:
     post:
       tags: [Deck]
@@ -810,6 +831,81 @@ components:
           description: true の場合、一覧には表示せず直接リンクのみでアクセス可能
           default: false
       required: [id, deck, hashtags]
+    GenerateThumbnailRequest:
+      type: object
+      properties:
+        deck:
+          $ref: "#/components/schemas/ThumbnailDeck"
+        cards:
+          type: array
+          maxItems: 19
+          items:
+            $ref: "#/components/schemas/ThumbnailCard"
+      required: [deck, cards]
+    GenerateThumbnailResponse:
+      type: object
+      properties:
+        thumbnailUrl:
+          $ref: "#/components/schemas/TmpStorageUrl"
+      required: [thumbnailUrl]
+    ThumbnailDeck:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        slots:
+          type: array
+          minItems: 18
+          maxItems: 19
+          items:
+            $ref: "#/components/schemas/DeckSlotForCloud"
+        aceSlotId:
+          type: integer
+          minimum: 0
+          maximum: 99
+          nullable: true
+        deckType:
+          type: string
+        centerCharacter:
+          type: string
+        participations:
+          type: array
+          items:
+            type: string
+        isFriendSlotEnabled:
+          type: boolean
+      required:
+        - id
+        - name
+        - slots
+        - aceSlotId
+    ThumbnailCard:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        cardName:
+          type: string
+          minLength: 1
+        characterName:
+          type: string
+          minLength: 1
+        rarity:
+          type: string
+          enum: [UR, SR, R, DR, BR, LR]
+        detail:
+          type: object
+          properties:
+            awakeAfterStorageUrl:
+              type: string
+              format: uri
+      required: [id, cardName, characterName, rarity]
     AuthUpgradeEmailRequest:
       type: object
       properties:
