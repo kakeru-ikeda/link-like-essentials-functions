@@ -838,7 +838,7 @@ components:
           $ref: "#/components/schemas/ThumbnailDeck"
         cards:
           type: array
-          maxItems: 18
+          maxItems: 19
           items:
             $ref: "#/components/schemas/ThumbnailCard"
       required: [deck, cards]

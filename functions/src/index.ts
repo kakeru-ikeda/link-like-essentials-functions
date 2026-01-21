@@ -55,6 +55,7 @@ export const userApi = functions
   .https.onRequest(Sentry.wrapHttpFunction(userApp));
 export const deckApi = functions
   .region('asia-northeast1')
+  .runWith({ memory: '1GB' })
   .https.onRequest(Sentry.wrapHttpFunction(deckApp));
 
 // 人気ハッシュタグ集計ジョブ（毎日0時・12時 JST）

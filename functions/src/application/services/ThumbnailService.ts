@@ -853,6 +853,7 @@ export class ThumbnailService {
   private readonly OUTPUT_SCALE = 0.5;
   private readonly BASE_WIDTH = 1700;
   private readonly BASE_HEIGHT = 2000;
+  private readonly RENDER_TIMEOUT_MS = 20000;
 
   constructor(storageUtil: StorageUtility = new StorageUtility()) {
     this.storageUtil = storageUtil;
@@ -909,12 +910,12 @@ export class ThumbnailService {
 
       await page.setContent(html, {
         waitUntil: 'networkidle0',
-        timeout: 30000,
+        timeout: this.RENDER_TIMEOUT_MS,
       });
 
       await page.waitForFunction(
         `Array.from(document.querySelectorAll('img')).every(img => img.complete && img.naturalHeight > 0)`,
-        { timeout: 30000 }
+        { timeout: this.RENDER_TIMEOUT_MS }
       );
 
       const element = await page.$('.deck-builder');
