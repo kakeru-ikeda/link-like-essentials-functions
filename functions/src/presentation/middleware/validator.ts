@@ -107,7 +107,7 @@ const ThumbnailCardSchema = z.object({
 
 export const GenerateThumbnailSchema = z.object({
   deck: ThumbnailDeckSchema,
-  cards: z.array(ThumbnailCardSchema).max(18),
+  cards: z.array(ThumbnailCardSchema).max(19),
 });
 
 // tmp 配下のデッキ画像/サムネイル URL 用スキーマ
