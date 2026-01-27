@@ -7,7 +7,7 @@
     "build": "tsc && tsc-alias",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
-    "emulators": "npm run build && firebase emulators:start",
+    "emulators": "npm run puppeteer:install && npm run build && firebase emulators:start",
     "emulators:firestore": "firebase emulators:start --only firestore",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
@@ -24,7 +24,8 @@
     "ci:local": "npm run lint && npm run format:check && npm run build && npm test",
     "gcp-build": "bash gcp-build.sh",
     "aggregate:hashtags": "npm run build && node lib/scripts/manualAggregatePopularHashtags.js",
-    "migrate:user-profile": "npm run build && node lib/scripts/migratePublishedDecksUserProfile.js"
+    "migrate:user-profile": "npm run build && node lib/scripts/migratePublishedDecksUserProfile.js",
+    "puppeteer:install": "node node_modules/puppeteer/install.mjs"
   },
   "engines": {
     "node": "20"
