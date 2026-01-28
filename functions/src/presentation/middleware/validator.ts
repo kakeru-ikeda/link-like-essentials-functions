@@ -68,18 +68,32 @@ const DeckSlotForCloudSchema = z.object({
 });
 
 // デッキ基本情報スキーマ（公開用）
-const DeckForCloudSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(255),
-  slots: z.array(DeckSlotForCloudSchema).length(19),
-  aceSlotId: z.number().int().min(0).max(17).nullable(),
-  deckType: z.string().optional(),
-  songId: z.string().optional(),
-  liveGrandPrixId: z.string().optional(),
-  liveGrandPrixDetailId: z.string().optional(),
-  score: z.number().optional(),
-  memo: z.string().optional(),
-});
+const DeckForCloudSchema = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1).max(255),
+    slots: z.array(DeckSlotForCloudSchema).length(19),
+    aceSlotId: z.number().int().min(0).max(17).nullable(),
+    deckType: z.string().optional(),
+    songId: z.string().optional(),
+    liveGrandPrixId: z.string().optional(),
+    liveGrandPrixDetailId: z.string().optional(),
+    gradeChallengeId: z.string().optional(),
+    gradeChallengeDetailId: z.string().optional(),
+    score: z.number().optional(),
+    memo: z.string().optional(),
+  })
+  .refine(
+    (data) =>
+      !(
+        (data.liveGrandPrixId || data.liveGrandPrixDetailId) &&
+        (data.gradeChallengeId || data.gradeChallengeDetailId)
+      ),
+    {
+      message:
+        'liveGrandPrixId/liveGrandPrixDetailId と gradeChallengeId/gradeChallengeDetailId は同時に指定できません',
+    }
+  );
 
 // サムネイル生成用のデッキスキーマ
 const ThumbnailDeckSchema = z.object({
