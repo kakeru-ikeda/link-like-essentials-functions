@@ -23,6 +23,8 @@ export interface DeckForCloud {
   songId?: string;
   liveGrandPrixId?: string;
   liveGrandPrixDetailId?: string;
+  gradeChallengeId?: string;
+  gradeChallengeDetailId?: string;
   score?: number;
   memo?: string;
   createdAt?: string; // オプショナル: クライアント側のタイムスタンプ（サーバー側では無視される）

@@ -949,6 +949,10 @@ components:
           type: string
         liveGrandPrixDetailId:
           type: string
+        gradeChallengeId:
+          type: string
+        gradeChallengeDetailId:
+          type: string
         score:
           type: number
         memo:
