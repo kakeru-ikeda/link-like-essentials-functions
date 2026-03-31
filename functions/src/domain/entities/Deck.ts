@@ -8,6 +8,7 @@ export interface DeckSlotForCloud {
   slotId: number;
   cardId: string | null;
   limitBreak?: number;
+  isAwakeAfter?: boolean; // 覚醒状態（true=覚醒後, false=覚醒前, undefined=覚醒後として扱う）
 }
 
 /**

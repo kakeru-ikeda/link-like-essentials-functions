@@ -902,9 +902,14 @@ components:
         detail:
           type: object
           properties:
+            awakeBeforeStorageUrl:
+              type: string
+              format: uri
+              description: "覚醒前イラストURL"
             awakeAfterStorageUrl:
               type: string
               format: uri
+              description: "覚醒後イラストURL"
       required: [id, cardName, characterName, rarity]
     AuthUpgradeEmailRequest:
       type: object
@@ -976,6 +981,9 @@ components:
           type: integer
           minimum: 0
           maximum: 14
+        isAwakeAfter:
+          type: boolean
+          description: "覚醒状態（true=覚醒後, false=覚醒前。省略時は覚醒後として扱う）"
       required:
         - slotId
         - cardId
