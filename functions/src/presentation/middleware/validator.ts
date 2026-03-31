@@ -65,6 +65,7 @@ const DeckSlotForCloudSchema = z.object({
   slotId: z.number().int().min(0).max(99),
   cardId: z.string().nullable(),
   limitBreak: z.number().int().min(0).max(14).optional(),
+  isAwakeAfter: z.boolean().optional(),
 });
 
 // デッキ基本情報スキーマ（公開用）
@@ -114,6 +115,7 @@ const ThumbnailCardSchema = z.object({
   rarity: z.enum(['UR', 'SR', 'R', 'DR', 'BR', 'LR']),
   detail: z
     .object({
+      awakeBeforeStorageUrl: z.string().url().optional(),
       awakeAfterStorageUrl: z.string().url().optional(),
     })
     .optional(),

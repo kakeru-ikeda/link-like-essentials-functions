@@ -8,6 +8,7 @@ export interface ThumbnailDeckSlot {
   slotId: number;
   cardId: string | null;
   limitBreak?: number;
+  isAwakeAfter?: boolean; // 覚醒状態（true=覚醒後, false=覚醒前。省略時は覚醒後として扱う）
 }
 
 export interface ThumbnailDeck {
@@ -22,7 +23,8 @@ export interface ThumbnailDeck {
 }
 
 export interface ThumbnailCardDetail {
-  awakeAfterStorageUrl?: string;
+  awakeBeforeStorageUrl?: string; // 覚醒前イラストURL
+  awakeAfterStorageUrl?: string; // 覚醒後イラストURL
 }
 
 export interface ThumbnailCard {
@@ -506,7 +508,12 @@ const renderCardSlot = (
     `;
   }
 
-  const cardImageUrl = card.detail?.awakeAfterStorageUrl || '';
+  const isAwakeAfter = slot.isAwakeAfter !== false; // undefined は覚醒後として扱う
+  const awakeAfterUrl = card.detail?.awakeAfterStorageUrl || '';
+  const awakeBeforeUrl = card.detail?.awakeBeforeStorageUrl || '';
+  const cardImageUrl = isAwakeAfter
+    ? awakeAfterUrl || awakeBeforeUrl
+    : awakeBeforeUrl || awakeAfterUrl;
   const cardName = escapeHtml(card.cardName);
 
   const aceBadgeHTML = isAce ? '<div class="ace-badge active"></div>' : '';
