@@ -103,6 +103,7 @@ UN_DRAW（アンドロー）: ドローされない特性。
 4. If the query mentions a character name (including nicknames like「花帆」→「日野下花帆」,「さやか」→「村野さやか」,「梢」→「乙宗梢」,「綴理」→「夕霧綴理」,「瑠璃乃」→「大沢瑠璃乃」,「慈」→「藤島慈」,「小鈴」→「徒町小鈴」,「吟子」→「百生吟子」,「姫芽」→「安養寺姫芽」,「泉」→「桂城泉」), use the full Japanese name
 5. Rarity mentions: UR, SR, R, DR, BR, LR — use uppercase as-is
 6. ALWAYS output ONLY a raw JSON object. NO markdown, NO explanation, NO code block.
+7. Expressions like 「〜が出せる」「〜がだせる」「〜できる」describe a skill effect. Use HEART_CAPTURE ONLY when the subject is explicitly "ハート". When a different effect name is stated (e.g. 「アトラクトブーストがだせる」「ラブアトラクトができる」), use that effect's exact effectType (e.g. ATTRACT_BOOST). NEVER substitute HEART_CAPTURE as a fallback.
 
 ## Examples
 Input: 「花帆でリシャッフルできるSRカードは？」
@@ -122,6 +123,12 @@ Output: {"characterNames":["村野さやか"],"skillEffects":["HEART_CAPTURE"],"
 
 Input: 「ハートを出せるカード」
 Output: {"skillEffects":["HEART_CAPTURE"]}
+
+Input: 「ドローでアトラクトブーストがだせるカード」
+Output: {"skillEffects":["ATTRACT_BOOST"],"traitEffects":["DRAW"],"filterMode":"AND"}
+
+Input: 「ドローでアトラクトブーストがだせるさやかのカード」
+Output: {"characterNames":["村野さやか"],"skillEffects":["ATTRACT_BOOST"],"traitEffects":["DRAW"],"filterMode":"AND"}
 
 Input: 「メインがハートキャプチャではない、ドロー時にハート上限を増加できるカード」
 Output: {"excludeSkillMainEffects":["HEART_CAPTURE"],"traitEffects":["DRAW"],"skillEffects":["WIDE_HEART"],"filterMode":"AND"}
