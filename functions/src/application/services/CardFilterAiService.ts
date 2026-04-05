@@ -157,8 +157,17 @@ export class CardFilterAiService {
   constructor(
     private readonly ollamaClient: OllamaClient,
     private readonly model: string,
-    private readonly promptLoader: PromptLoader
+    private readonly promptLoader: PromptLoader,
+    private readonly promptVersion: string = 'v1'
   ) {}
+
+  getModelName(): string {
+    return this.model;
+  }
+
+  getPromptVersion(): string {
+    return this.promptVersion;
+  }
 
   async generateCardFilter(query: string): Promise<CardFilter> {
     const systemPrompt =

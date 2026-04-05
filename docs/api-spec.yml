@@ -85,8 +85,6 @@ paths:
                     characterNames: ["日野下花帆"]
                     filterMode: "AND"
                   rating: "positive"
-                  modelName: "gemma4:e4b"
-                  promptVersion: "v1"
                   latencyMs: 1234
               negative:
                 summary: 悪い評価（正解フィルタ付き）
@@ -103,8 +101,6 @@ paths:
                     rarities: ["UR"]
                     skillEffects: ["RESHUFFLE"]
                     filterMode: "AND"
-                  modelName: "gemma4:e4b"
-                  promptVersion: "v1"
                   latencyMs: 1456
       responses:
         "201":
@@ -1267,20 +1263,12 @@ components:
           $ref: "#/components/schemas/CardFilter"
           nullable: true
           description: negative 評価時にユーザーが思う正解フィルタ、任意
-        modelName:
-          type: string
-          description: 使用したモデル名
-          example: "gemma4:e4b"
-        promptVersion:
-          type: string
-          description: 使用したプロンプトバージョン
-          example: "v1"
         latencyMs:
           type: integer
           minimum: 0
           nullable: true
           description: AI応答レイテンシ（ミリ秒）、任意
-      required: [userInput, aiResponse, rating, modelName, promptVersion]
+      required: [userInput, aiResponse, rating]
     AiFeedbackResponse:
       type: object
       properties:

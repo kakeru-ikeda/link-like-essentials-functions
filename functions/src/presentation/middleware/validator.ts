@@ -248,7 +248,5 @@ export const AiFeedbackSchema = z.object({
   rating: z.enum(['positive', 'negative']),
   comment: z.string().max(1000).optional().nullable(),
   correctedFilter: CardFilterSchema.optional().nullable(),
-  modelName: z.string().min(1),
-  promptVersion: z.string().min(1),
   latencyMs: z.number().int().min(0).optional().nullable(),
 });
