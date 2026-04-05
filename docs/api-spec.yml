@@ -60,6 +60,61 @@ paths:
                       filterMode: "AND"
         default:
           $ref: "#/components/responses/StandardErrors"
+  /ai/cards/filter-query/feedback:
+    post:
+      tags: [AI]
+      summary: AIフィルタ生成結果のフィードバック送信
+      description: >-
+        AIが生成したカードフィルタに対するユーザーのフィードバックを Firestore に保存する。
+        positive/negative の評価、自由記述コメント、negative 時の正解フィルタを収集し、将来のモデルチューニングに活用する。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiFeedbackRequest"
+            examples:
+              positive:
+                summary: 良い評価
+                value:
+                  userInput: "花帆のSRカード"
+                  aiResponse:
+                    rarities: ["SR"]
+                    characterNames: ["日野下花帆"]
+                    filterMode: "AND"
+                  rating: "positive"
+                  modelName: "gemma4:e4b"
+                  promptVersion: "v1"
+                  latencyMs: 1234
+              negative:
+                summary: 悪い評価（正解フィルタ付き）
+                value:
+                  userInput: "さやかのURでリシャッフルできるカード"
+                  aiResponse:
+                    characterNames: ["村野さやか"]
+                    rarities: ["UR"]
+                    filterMode: "AND"
+                  rating: "negative"
+                  comment: "リシャッフルが抜けていた"
+                  correctedFilter:
+                    characterNames: ["村野さやか"]
+                    rarities: ["UR"]
+                    skillEffects: ["RESHUFFLE"]
+                    filterMode: "AND"
+                  modelName: "gemma4:e4b"
+                  promptVersion: "v1"
+                  latencyMs: 1456
+      responses:
+        "201":
+          description: フィードバック保存成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiFeedbackResponse"
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /users/batch:
     get:
       tags: [User]
@@ -1187,6 +1242,52 @@ components:
           description: 自然言語によるカード検索クエリ
           example: "花帆でリシャッフルできるSRカードは？"
       required: [query]
+    AiFeedbackRequest:
+      type: object
+      properties:
+        userInput:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: ユーザーが入力した自然言語クエリ
+          example: "花帆のSRカード"
+        aiResponse:
+          $ref: "#/components/schemas/CardFilter"
+          description: AIが生成したフィルタ結果
+        rating:
+          type: string
+          enum: [positive, negative]
+          description: 評価（良し／悪し）
+        comment:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: 自由記述コメント（何が違うか等）、任意
+        correctedFilter:
+          $ref: "#/components/schemas/CardFilter"
+          nullable: true
+          description: negative 評価時にユーザーが思う正解フィルタ、任意
+        modelName:
+          type: string
+          description: 使用したモデル名
+          example: "gemma4:e4b"
+        promptVersion:
+          type: string
+          description: 使用したプロンプトバージョン
+          example: "v1"
+        latencyMs:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: AI応答レイテンシ（ミリ秒）、任意
+      required: [userInput, aiResponse, rating, modelName, promptVersion]
+    AiFeedbackResponse:
+      type: object
+      properties:
+        feedbackId:
+          type: string
+          description: 保存されたフィードバックの Firestore ドキュメントID
+      required: [feedbackId]
     CardFilterQueryResponse:
       type: object
       properties:
