@@ -71,7 +71,7 @@ export class PromptLoader {
             try {
               const json = JSON.parse(body) as { content?: string };
               if (!json.content) {
-                console.warn('[PromptLoader] GitHub API レスポンスに content フィールドがありません');
+                console.warn('[PromptLoader] GitHub API レスポンスに content フィールドがありません。レスポンス:', body.slice(0, 200));
                 resolve(undefined);
                 return;
               }

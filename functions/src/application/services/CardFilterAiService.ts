@@ -180,7 +180,7 @@ export class CardFilterAiService {
   ) {}
 
   async generateCardFilter(query: string): Promise<CardFilter> {
-    const systemPrompt = (await this.promptLoader.load()) ?? DEFAULT_SYSTEM_PROMPT;
+    const systemPrompt = (await this.promptLoader.load()) || DEFAULT_SYSTEM_PROMPT;
     const rawContent = await this.ollamaClient.chat({
       model: this.model,
       messages: [
@@ -198,7 +198,9 @@ export class CardFilterAiService {
 
     let parsed: unknown;
     try {
-      parsed = JSON.parse(rawContent);
+      // LLM がスカラー値の直後に余分な ] を生成することがあるため前処理で除去する
+      const cleaned = rawContent.replace(/\b(false|true|null)\s*\]/g, '$1');
+      parsed = JSON.parse(cleaned);
     } catch {
       throw new InternalServerError(
         'LLM のレスポンスが JSON として解析できませんでした'
