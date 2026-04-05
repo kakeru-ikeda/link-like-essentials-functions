@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase-admin/firestore';
 
-import type { CardFilter } from '@/application/services/CardFilterAiService';
+import type { CardFilter } from '@/domain/entities/CardFilter';
 
 export type AiFeedbackRating = 'positive' | 'negative';
 
