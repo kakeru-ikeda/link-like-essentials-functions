@@ -1,5 +1,7 @@
+import { AiFeedbackService } from '@/application/services/AiFeedbackService';
 import { CardFilterAiService } from '@/application/services/CardFilterAiService';
 import { OllamaClient } from '@/infrastructure/ai/OllamaClient';
+import { AiFeedbackRepository } from '@/infrastructure/firestore/repositories/AiFeedbackRepository';
 import { PromptLoader } from '@/infrastructure/prompt/PromptLoader';
 
 export const createCardFilterAiService = (): CardFilterAiService => {
@@ -9,4 +11,9 @@ export const createCardFilterAiService = (): CardFilterAiService => {
   const ollamaClient = new OllamaClient(baseUrl);
   const promptLoader = new PromptLoader();
   return new CardFilterAiService(ollamaClient, model, promptLoader);
+};
+
+export const createAiFeedbackService = (): AiFeedbackService => {
+  const aiFeedbackRepository = new AiFeedbackRepository();
+  return new AiFeedbackService(aiFeedbackRepository);
 };

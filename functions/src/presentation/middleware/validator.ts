@@ -188,3 +188,67 @@ export const CardFilterQuerySchema = z.object({
     .min(1, 'クエリを入力してください')
     .max(500, 'クエリは500文字以内で入力してください'),
 });
+
+const CardFilterSchema = z
+  .object({
+    keyword: z.string().optional(),
+    rarities: z.array(z.enum(['UR', 'SR', 'R', 'DR', 'BR', 'LR'])).optional(),
+    characterNames: z.array(z.string()).optional(),
+    styleTypes: z
+      .array(z.enum(['CHEERLEADER', 'TRICKSTER', 'PERFORMER', 'MOODMAKER']))
+      .optional(),
+    limitedTypes: z
+      .array(
+        z.enum([
+          'PERMANENT',
+          'LIMITED',
+          'SPRING_LIMITED',
+          'SUMMER_LIMITED',
+          'AUTUMN_LIMITED',
+          'WINTER_LIMITED',
+          'BIRTHDAY_LIMITED',
+          'LEG_LIMITED',
+          'SHUFFLE_LIMITED',
+          'BATTLE_LIMITED',
+          'BANGDREAM_LIMITED',
+          'PARTY_LIMITED',
+          'ACTIVITY_LIMITED',
+          'GRADUATE_LIMITED',
+          'LOGIN_BONUS',
+          'REWARD',
+        ])
+      )
+      .optional(),
+    favoriteModes: z
+      .array(z.enum(['NONE', 'HAPPY', 'MELLOW', 'NEUTRAL']))
+      .optional(),
+    skillEffects: z.array(z.string()).optional(),
+    skillMainEffects: z.array(z.string()).optional(),
+    skillSearchTargets: z
+      .array(z.enum(['SKILL', 'SPECIAL_APPEAL', 'TRAIT']))
+      .optional(),
+    traitEffects: z.array(z.string()).optional(),
+    hasTokens: z.boolean().optional(),
+    excludeSkillEffects: z.array(z.string()).optional(),
+    excludeSkillSearchTargets: z
+      .array(z.enum(['SKILL', 'SPECIAL_APPEAL', 'TRAIT']))
+      .optional(),
+    excludeSkillMainEffects: z.array(z.string()).optional(),
+    excludeTraitEffects: z.array(z.string()).optional(),
+    filterMode: z.enum(['OR', 'AND']).optional(),
+  })
+  .strict();
+
+export const AiFeedbackSchema = z.object({
+  userInput: z
+    .string()
+    .min(1, 'クエリを入力してください')
+    .max(500, 'クエリは500文字以内で入力してください'),
+  aiResponse: CardFilterSchema,
+  rating: z.enum(['positive', 'negative']),
+  comment: z.string().max(1000).optional().nullable(),
+  correctedFilter: CardFilterSchema.optional().nullable(),
+  modelName: z.string().min(1),
+  promptVersion: z.string().min(1),
+  latencyMs: z.number().int().min(0).optional().nullable(),
+});
