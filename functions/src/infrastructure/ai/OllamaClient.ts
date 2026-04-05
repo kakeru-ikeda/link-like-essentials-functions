@@ -50,15 +50,22 @@ export class OllamaClient {
       !this.baseUrl.includes('localhost') &&
       !this.baseUrl.includes('127.0.0.1')
     ) {
-      // Cloud Run の OIDC audience はベース URL（パスなし）である必要がある
       const audience = this.baseUrl.replace(/\/$/, '');
       const auth = new GoogleAuth();
       const idTokenClient = await auth.getIdTokenClient(audience);
       const idTokenHeaders = await idTokenClient.getRequestHeaders(url);
       // getRequestHeaders は Headers オブジェクトを返す場合があるため、plain object に変換
       const flatHeaders: Record<string, string> = {};
-      for (const [k, v] of Object.entries(idTokenHeaders)) {
-        if (typeof v === 'string') flatHeaders[k] = v;
+      if (typeof (idTokenHeaders as Headers).forEach === 'function') {
+        (idTokenHeaders as Headers).forEach((value, key) => {
+          flatHeaders[key] = value;
+        });
+      } else {
+        for (const [k, v] of Object.entries(
+          idTokenHeaders as unknown as Record<string, unknown>
+        )) {
+          if (typeof v === 'string') flatHeaders[k] = v;
+        }
       }
       headers = { ...headers, ...flatHeaders };
     }
