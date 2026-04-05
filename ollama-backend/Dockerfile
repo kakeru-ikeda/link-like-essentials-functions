@@ -1,4 +1,4 @@
-FROM docker.io/ollama/ollama:0.6.3
+FROM docker.io/ollama/ollama:latest
 
 # Cloud Run はポート 8080 で待ち受ける
 ENV OLLAMA_HOST 0.0.0.0:8080
@@ -23,8 +23,8 @@ ENV MODEL gemma-tuned
 RUN ollama serve & \
     for i in $(seq 1 60); do \
     if ollama list > /dev/null 2>&1; then \
-    ollama pull $BASE_MODEL; \
-    ollama create $MODEL -f /tmp/Modelfile; \
+    ollama pull $BASE_MODEL || { echo "ollama pull $BASE_MODEL failed" >&2; exit 1; }; \
+    ollama create $MODEL -f /tmp/Modelfile || { echo "ollama create $MODEL failed" >&2; exit 1; }; \
     exit 0; \
     fi; \
     sleep 1; \
