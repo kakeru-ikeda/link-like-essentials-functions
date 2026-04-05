@@ -40,6 +40,8 @@ export class AiController {
       const body = AiFeedbackSchema.parse(req.body);
       const feedback = await this.aiFeedbackService.submitFeedback({
         uid,
+        modelName: this.cardFilterAiService.getModelName(),
+        promptVersion: this.cardFilterAiService.getPromptVersion(),
         ...body,
       });
       res.status(201).json({ feedbackId: feedback.id });
