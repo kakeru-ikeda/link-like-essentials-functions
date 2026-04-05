@@ -63,6 +63,8 @@ export class PromptLoader {
     }
 
     const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+    // eslint-disable-next-line no-console
+    console.info('[PromptLoader] GitHub からプロンプトをフェッチします:', url);
 
     return new Promise((resolve) => {
       const req = https.get(
@@ -96,6 +98,7 @@ export class PromptLoader {
                 json.content.replace(/\n/g, ''),
                 'base64'
               ).toString('utf-8');
+              console.info(`[PromptLoader] フェッチ成功 (${decoded.length} 文字)`);
               this.cache = decoded;
               resolve(decoded);
             } catch (err) {
