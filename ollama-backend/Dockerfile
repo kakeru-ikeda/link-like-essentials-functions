@@ -1,4 +1,4 @@
-FROM ollama/ollama:0.5.7
+FROM docker.io/ollama/ollama:0.6.3
 
 # Cloud Run はポート 8080 で待ち受ける
 ENV OLLAMA_HOST 0.0.0.0:8080
@@ -15,12 +15,16 @@ ENV OLLAMA_KEEP_ALIVE -1
 # 並列リクエスト数（Cloud Run の --concurrency と合わせる）
 ENV OLLAMA_NUM_PARALLEL 4
 
+COPY Modelfile /tmp/Modelfile
+
 # コンテナイメージにモデルの重みを焼き込む（起動高速化）
-ENV MODEL gemma4:e4b
+ENV BASE_MODEL gemma4:e4b
+ENV MODEL gemma-tuned
 RUN ollama serve & \
     for i in $(seq 1 60); do \
-    if curl -fsS http://127.0.0.1:8080/ > /dev/null 2>&1; then \
-    ollama pull $MODEL; \
+    if ollama list > /dev/null 2>&1; then \
+    ollama pull $BASE_MODEL; \
+    ollama create $MODEL -f /tmp/Modelfile; \
     exit 0; \
     fi; \
     sleep 1; \

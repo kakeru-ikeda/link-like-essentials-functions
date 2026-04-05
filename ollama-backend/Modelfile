@@ -1,0 +1,11 @@
+FROM gemma4:e4b
+
+# JSONの指定を崩さないようにランダム性を極力下げる
+PARAMETER temperature 0.1
+
+# 突飛な出力候補を足切りする
+PARAMETER top_p 0.5
+PARAMETER top_k 20
+
+# シードを固定して再現性を高める
+PARAMETER seed 42

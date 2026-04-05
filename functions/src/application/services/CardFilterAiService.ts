@@ -189,11 +189,6 @@ export class CardFilterAiService {
         { role: 'user', content: query },
       ],
       stream: false,
-      options: {
-        temperature: 0.1,
-        top_p: 0.95,
-        top_k: 64,
-      },
       format: 'json',
     });
 
