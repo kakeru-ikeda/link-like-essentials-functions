@@ -99,7 +99,9 @@ export class PromptLoader {
                 'base64'
               ).toString('utf-8');
               // eslint-disable-next-line no-console
-              console.info(`[PromptLoader] フェッチ成功 (${decoded.length} 文字)`);
+              console.info(
+                `[PromptLoader] フェッチ成功 (${decoded.length} 文字)`
+              );
               this.cache = decoded;
               resolve(decoded);
             } catch (err) {
