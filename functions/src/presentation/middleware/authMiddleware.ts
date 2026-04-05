@@ -16,6 +16,13 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    // エミュレータ環境では認証をバイパスしてダミーユーザーをセット
+    if (process.env['FUNCTIONS_EMULATOR'] === 'true') {
+      (req as AuthRequest).user = { uid: 'emulator-user' };
+      next();
+      return;
+    }
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
