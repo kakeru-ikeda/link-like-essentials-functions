@@ -124,6 +124,9 @@ Output: {"characterNames":["村野さやか"],"skillEffects":["HEART_CAPTURE"],"
 Input: 「ハートを出せるカード」
 Output: {"skillEffects":["HEART_CAPTURE"]}
 
+Input: 「ドロー時にアトラクトブースト」
+Output: {"skillEffects":["ATTRACT_BOOST"],"traitEffects":["DRAW"],"filterMode":"AND"}
+
 Input: 「ドローでアトラクトブーストがだせるカード」
 Output: {"skillEffects":["ATTRACT_BOOST"],"traitEffects":["DRAW"],"filterMode":"AND"}
 
