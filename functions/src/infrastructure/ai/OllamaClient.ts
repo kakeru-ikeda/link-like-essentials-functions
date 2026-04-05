@@ -46,7 +46,10 @@ export class OllamaClient {
     };
 
     // Cloud Run（非 localhost）の場合は OIDC トークンで認証
-    if (!this.baseUrl.includes('localhost') && !this.baseUrl.includes('127.0.0.1')) {
+    if (
+      !this.baseUrl.includes('localhost') &&
+      !this.baseUrl.includes('127.0.0.1')
+    ) {
       const auth = new GoogleAuth();
       const idTokenClient = await auth.getIdTokenClient(this.baseUrl);
       const idTokenHeaders = await idTokenClient.getRequestHeaders(url);

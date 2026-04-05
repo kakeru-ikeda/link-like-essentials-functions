@@ -180,7 +180,8 @@ export class CardFilterAiService {
   ) {}
 
   async generateCardFilter(query: string): Promise<CardFilter> {
-    const systemPrompt = (await this.promptLoader.load()) || DEFAULT_SYSTEM_PROMPT;
+    const systemPrompt =
+      (await this.promptLoader.load()) || DEFAULT_SYSTEM_PROMPT;
     const rawContent = await this.ollamaClient.chat({
       model: this.model,
       messages: [
@@ -207,7 +208,11 @@ export class CardFilterAiService {
       );
     }
 
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       throw new InternalServerError('LLM のレスポンスが不正な形式です');
     }
 
@@ -250,15 +255,46 @@ export class CardFilterAiService {
       'TRAIT',
     ]);
     const validSkillEffects = new Set([
-      'WIDE_HEART', 'LOVE_ATTRACT', 'VOLTAGE_GAIN', 'HEART_CAPTURE', 'HEART_BOOST',
-      'WIDE_HEART_BOOST', 'ATTRACT_BOOST', 'VOLTAGE_BOOST', 'VIBES', 'AMBIENCE',
-      'MENTAL_RECOVER', 'MENTAL_PROTECT', 'MENTAL_GUARD', 'RESHUFFLE', 'EXTEND_HAND',
-      'SEARCH', 'BLESSING', 'IMITATION', 'AP_GAIN', 'HEAT_UP', 'BELIEF', 'IGNITION',
+      'WIDE_HEART',
+      'LOVE_ATTRACT',
+      'VOLTAGE_GAIN',
+      'HEART_CAPTURE',
+      'HEART_BOOST',
+      'WIDE_HEART_BOOST',
+      'ATTRACT_BOOST',
+      'VOLTAGE_BOOST',
+      'VIBES',
+      'AMBIENCE',
+      'MENTAL_RECOVER',
+      'MENTAL_PROTECT',
+      'MENTAL_GUARD',
+      'RESHUFFLE',
+      'EXTEND_HAND',
+      'SEARCH',
+      'BLESSING',
+      'IMITATION',
+      'AP_GAIN',
+      'HEAT_UP',
+      'BELIEF',
+      'IGNITION',
     ]);
     const validTraitEffects = new Set([
-      'HEART_COLLECT', 'ENCORE', 'SHOT', 'DRAW', 'AP_REDUCE', 'AP_SUPPORT',
-      'INSTANCE', 'IMMORTAL', 'INTERPRETATION', 'ACCUMULATE', 'OVER_SECTION',
-      'ALTERNATE_IGNITION', 'CHAIN', 'FAVORITE', 'REINFORCE', 'UN_DRAW',
+      'HEART_COLLECT',
+      'ENCORE',
+      'SHOT',
+      'DRAW',
+      'AP_REDUCE',
+      'AP_SUPPORT',
+      'INSTANCE',
+      'IMMORTAL',
+      'INTERPRETATION',
+      'ACCUMULATE',
+      'OVER_SECTION',
+      'ALTERNATE_IGNITION',
+      'CHAIN',
+      'FAVORITE',
+      'REINFORCE',
+      'UN_DRAW',
     ]);
     const validFilterModes = new Set(['OR', 'AND']);
 
@@ -287,19 +323,31 @@ export class CardFilterAiService {
       validFavoriteModes
     );
     result.skillEffects = filterString(raw['skillEffects'], validSkillEffects);
-    result.skillMainEffects = filterString(raw['skillMainEffects'], validSkillEffects);
+    result.skillMainEffects = filterString(
+      raw['skillMainEffects'],
+      validSkillEffects
+    );
     result.skillSearchTargets = filterString(
       raw['skillSearchTargets'],
       validSkillSearchTargets
     );
     result.traitEffects = filterString(raw['traitEffects'], validTraitEffects);
-    result.excludeSkillEffects = filterString(raw['excludeSkillEffects'], validSkillEffects);
+    result.excludeSkillEffects = filterString(
+      raw['excludeSkillEffects'],
+      validSkillEffects
+    );
     result.excludeSkillSearchTargets = filterString(
       raw['excludeSkillSearchTargets'],
       validSkillSearchTargets
     );
-    result.excludeSkillMainEffects = filterString(raw['excludeSkillMainEffects'], validSkillEffects);
-    result.excludeTraitEffects = filterString(raw['excludeTraitEffects'], validTraitEffects);
+    result.excludeSkillMainEffects = filterString(
+      raw['excludeSkillMainEffects'],
+      validSkillEffects
+    );
+    result.excludeTraitEffects = filterString(
+      raw['excludeTraitEffects'],
+      validTraitEffects
+    );
 
     if (typeof raw['hasTokens'] === 'boolean') {
       result.hasTokens = raw['hasTokens'];

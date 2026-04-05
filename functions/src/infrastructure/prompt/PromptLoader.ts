@@ -38,7 +38,10 @@ export class PromptLoader {
       this.cache = content;
       return content;
     } catch (err) {
-      console.warn('[PromptLoader] ローカルプロンプトファイルの読み込みに失敗しました:', err);
+      console.warn(
+        '[PromptLoader] ローカルプロンプトファイルの読み込みに失敗しました:',
+        err
+      );
       return undefined;
     }
   }
@@ -46,7 +49,9 @@ export class PromptLoader {
   private loadFromGitHub(): Promise<string | undefined> {
     const pat = process.env['GITHUB_PAT'];
     if (!pat) {
-      console.warn('[PromptLoader] GITHUB_PAT が設定されていません。デフォルトプロンプトを使用します。');
+      console.warn(
+        '[PromptLoader] GITHUB_PAT が設定されていません。デフォルトプロンプトを使用します。'
+      );
       return Promise.resolve(undefined);
     }
 
@@ -71,23 +76,35 @@ export class PromptLoader {
             try {
               const json = JSON.parse(body) as { content?: string };
               if (!json.content) {
-                console.warn('[PromptLoader] GitHub API レスポンスに content フィールドがありません。レスポンス:', body.slice(0, 200));
+                console.warn(
+                  '[PromptLoader] GitHub API レスポンスに content フィールドがありません。レスポンス:',
+                  body.slice(0, 200)
+                );
                 resolve(undefined);
                 return;
               }
               // GitHub API の content フィールドは Base64 エンコードされている（改行あり）
-              const decoded = Buffer.from(json.content.replace(/\n/g, ''), 'base64').toString('utf-8');
+              const decoded = Buffer.from(
+                json.content.replace(/\n/g, ''),
+                'base64'
+              ).toString('utf-8');
               this.cache = decoded;
               resolve(decoded);
             } catch (err) {
-              console.warn('[PromptLoader] GitHub API レスポンスの解析に失敗しました:', err);
+              console.warn(
+                '[PromptLoader] GitHub API レスポンスの解析に失敗しました:',
+                err
+              );
               resolve(undefined);
             }
           });
         }
       );
       req.on('error', (err) => {
-        console.warn('[PromptLoader] GitHub API へのリクエストが失敗しました:', err);
+        console.warn(
+          '[PromptLoader] GitHub API へのリクエストが失敗しました:',
+          err
+        );
         resolve(undefined);
       });
     });

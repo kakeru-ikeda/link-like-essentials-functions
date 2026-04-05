@@ -11,7 +11,11 @@ export const createAiRouter = (): Router => {
   const aiController = new AiController(cardFilterAiService);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  router.post('/ai/cards/filter-query', authenticate, aiController.generateCardFilter);
+  router.post(
+    '/ai/cards/filter-query',
+    authenticate,
+    aiController.generateCardFilter
+  );
 
   return router;
 };
