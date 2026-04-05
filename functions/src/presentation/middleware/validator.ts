@@ -178,3 +178,11 @@ export const GetCommentsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   perPage: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
+
+// AI 関連のバリデーションスキーマ
+export const CardFilterQuerySchema = z.object({
+  query: z
+    .string()
+    .min(1, 'クエリを入力してください')
+    .max(500, 'クエリは500文字以内で入力してください'),
+});

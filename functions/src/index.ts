@@ -12,6 +12,7 @@ import { createDeckService } from '@/presentation/factories/deckServiceFactory';
 import { createDeckRouter } from '@/presentation/routes/deckRoutes';
 import { createThumbnailRouter } from '@/presentation/routes/thumbnailRoutes';
 import { createUserRouter } from '@/presentation/routes/userRoutes';
+import { createAiRouter } from '@/presentation/routes/aiRoutes';
 import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 
 const sentryDsn = process.env.SENTRY_DSN;
@@ -49,6 +50,13 @@ deckApp.use('/', createDeckRouter());
 deckApp.use('/', createThumbnailRouter());
 deckApp.use(errorHandler);
 
+// Express初期化（aiApi）
+const aiApp = express();
+aiApp.use(cors({ origin: true }));
+aiApp.use(express.json());
+aiApp.use('/', createAiRouter());
+aiApp.use(errorHandler);
+
 // Cloud Functions Export
 export const userApi = functions
   .region('asia-northeast1')
@@ -57,6 +65,9 @@ export const deckApi = functions
   .region('asia-northeast1')
   .runWith({ memory: '1GB' })
   .https.onRequest(Sentry.wrapHttpFunction(deckApp));
+export const aiApi = functions
+  .region('asia-northeast1')
+  .https.onRequest(Sentry.wrapHttpFunction(aiApp));
 
 // 人気ハッシュタグ集計ジョブ（毎日0時・12時 JST）
 export const aggregatePopularHashtags = functions

@@ -9,9 +9,57 @@ servers:
     description: User API エンドポイント
   - url: https://asia-northeast1-{projectId}.cloudfunctions.net/deckApi
     description: Deck API エンドポイント
+  - url: https://asia-northeast1-{projectId}.cloudfunctions.net/aiApi
+    description: AI API エンドポイント
 security:
   - bearerAuth: []
 paths:
+  /ai/cards/filter-query:
+    post:
+      tags: [AI]
+      summary: 自然言語からカードフィルタクエリを生成
+      description: >-
+        自然言語のテキストを解析し、CardFilter インターフェースに準拠したフィルタパラメータを返却する。
+        内部で Cloud Run 上の Ollama (gemma4:e4b) を経由して LLM 推論を行う。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardFilterQueryRequest"
+            examples:
+              basic:
+                summary: 複合条件（キャラクター＋レアリティ＋スキル）
+                value:
+                  query: "花帆でリシャッフルできるSRカードは？"
+              simpleRarity:
+                summary: レアリティ＋スタイルタイプ
+                value:
+                  query: "URのチアリーダーカードが見たい"
+              exclusion:
+                summary: 除外フィルタ
+                value:
+                  query: "リシャッフルを除外したURカード"
+      responses:
+        "200":
+          description: フィルタクエリ生成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardFilterQueryResponse"
+              examples:
+                basic:
+                  summary: 複合条件の結果例
+                  value:
+                    filter:
+                      rarities: ["SR"]
+                      characterNames: ["日野下花帆"]
+                      skillEffects: ["RESHUFFLE"]
+                      filterMode: "AND"
+        default:
+          $ref: "#/components/responses/StandardErrors"
   /users/batch:
     get:
       tags: [User]
@@ -1121,6 +1169,106 @@ components:
         details:
           description: バリデーション詳細（ValidationError のみ）
       required: [code, message]
+    CardFilterQueryRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: 自然言語によるカード検索クエリ
+          example: "花帆でリシャッフルできるSRカードは？"
+      required: [query]
+    CardFilterQueryResponse:
+      type: object
+      properties:
+        filter:
+          $ref: "#/components/schemas/CardFilter"
+      required: [filter]
+    CardFilter:
+      type: object
+      description: カード検索フィルタ条件（CardFilter インターフェースに準拠）
+      properties:
+        keyword:
+          type: string
+          description: キーワード検索
+        rarities:
+          type: array
+          items:
+            type: string
+            enum: [UR, SR, R, DR, BR, LR]
+          description: レアリティ絞り込み
+        characterNames:
+          type: array
+          items:
+            type: string
+          description: キャラクター名絞り込み
+        styleTypes:
+          type: array
+          items:
+            type: string
+            enum: [CHEERLEADER, TRICKSTER, PERFORMER, MOODMAKER]
+          description: スタイルタイプ絞り込み
+        limitedTypes:
+          type: array
+          items:
+            type: string
+          description: 限定タイプ絞り込み
+        favoriteModes:
+          type: array
+          items:
+            type: string
+            enum: [NONE, HAPPY, MELLOW, NEUTRAL]
+          description: フェイバリットモード絞り込み
+        skillEffects:
+          type: array
+          items:
+            type: string
+          description: スキル効果絞り込み
+        skillMainEffects:
+          type: array
+          items:
+            type: string
+          description: スキルメイン効果絞り込み
+        skillSearchTargets:
+          type: array
+          items:
+            type: string
+            enum: [SKILL, SPECIAL_APPEAL, TRAIT]
+          description: スキル検索対象絞り込み
+        traitEffects:
+          type: array
+          items:
+            type: string
+          description: 特性効果絞り込み
+        hasTokens:
+          type: boolean
+          description: トークン有無フラグ
+        excludeSkillEffects:
+          type: array
+          items:
+            type: string
+          description: スキル効果除外
+        excludeSkillSearchTargets:
+          type: array
+          items:
+            type: string
+            enum: [SKILL, SPECIAL_APPEAL, TRAIT]
+          description: スキル検索対象除外
+        excludeSkillMainEffects:
+          type: array
+          items:
+            type: string
+          description: スキルメイン効果除外
+        excludeTraitEffects:
+          type: array
+          items:
+            type: string
+          description: 特性効果除外
+        filterMode:
+          type: string
+          enum: [OR, AND]
+          description: フィルタの結合モード
   responses:
     StandardErrors:
       description: エラー
