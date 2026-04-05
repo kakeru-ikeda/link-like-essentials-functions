@@ -35,6 +35,8 @@ jobs:
         run: |
           echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" > .env
           echo "DISCORD_REPORT_WEBHOOK_URL=${{ secrets.DISCORD_REPORT_WEBHOOK_URL }}" >> .env
+          echo "OLLAMA_BASE_URL=${{ secrets.OLLAMA_BASE_URL }}" >> .env
+          echo "OLLAMA_MODEL=${{ secrets.OLLAMA_MODEL }}" >> .env
 
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
