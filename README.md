@@ -36,6 +36,7 @@ npm run deploy
 - [エミュレータ使用ガイド](docs/EMULATOR_GUIDE.md)
 - [GitHub Actions セットアップ](docs/GITHUB_ACTIONS_SETUP.md)
 - [データ移行ガイド (userProfile)](docs/MIGRATION_USER_PROFILE.md)
+- [AI フィルタクエリ設計書](docs/AI_FILTER_QUERY_DESIGN.md)
 - [API 仕様](docs/api-spec.yml)
 
 ## プロジェクト構造
@@ -327,3 +328,92 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/userApi`
 - ESLint + Prettier
 - レイヤードアーキテクチャ
 - 依存性注入
+
+---
+
+## AI API (aiApi)
+
+Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/aiApi`
+
+| メソッド | パス                     | 説明                         | 認証 |
+| -------- | ------------------------ | ---------------------------- | ---- |
+| POST     | `/ai/cards/filter-query` | 自然言語でカードフィルタ生成 | 必須 |
+
+### POST /ai/cards/filter-query
+
+自然言語クエリを受け取り、LLM が Firestore カード検索条件 (CardFilter) を JSON で生成して返します。
+
+**リクエストボディ:**
+
+```json
+{
+  "query": "花帆でリシャッフルできるSRカードは？"
+}
+```
+
+**レスポンス例:**
+
+```json
+{
+  "filter": {
+    "memberIds": ["hanaho"],
+    "rarities": ["SR"],
+    "skillEffects": ["RESHUFFLE"],
+    "filterMode": "AND"
+  }
+}
+```
+
+**エラーレスポンス:**
+
+```json
+{
+  "error": "エラーメッセージ"
+}
+```
+
+---
+
+## ollama-backend (LLM エンジン)
+
+`ollama-backend/` 配下に Cloud Run + NVIDIA L4 GPU で動作する Ollama コンテナの設定があります。
+
+### 前提
+
+- Google Cloud SDK (`gcloud`) がインストール済みで対象プロジェクトにログイン済み
+- Artifact Registry リポジトリ `asia-northeast1-docker.pkg.dev/link-like-essentials/lles-llm` が作成済み
+- Cloud Run が `asia-southeast1` (NVIDIA L4 対応リージョン) で有効
+
+### ビルド & デプロイ
+
+```bash
+cd ollama-backend
+
+# ビルド + デプロイ（通常）
+./deploy.sh
+
+# イメージビルドのみ（デプロイしない）
+./deploy.sh --build-only
+
+# デプロイのみ（ビルド済みイメージを使用）
+./deploy.sh --deploy-only
+```
+
+### Dockerfile の主要引数 / 環境変数
+
+| 変数名                | デフォルト値   | 説明                                                        |
+| --------------------- | -------------- | ----------------------------------------------------------- |
+| `OLLAMA_HOST`         | `0.0.0.0:8080` | Cloud Run はポート 8080 で待ち受ける                        |
+| `OLLAMA_MODELS`       | `/models`      | モデルの重みの保存先                                        |
+| `OLLAMA_DEBUG`        | `false`        | ログの詳細度                                                |
+| `OLLAMA_KEEP_ALIVE`   | `-1`           | GPU メモリからモデルをアンロードしない (`-1` = 無制限)      |
+| `OLLAMA_NUM_PARALLEL` | `4`            | 並列リクエスト数（Cloud Run の `--concurrency` と合わせる） |
+| `MODEL`               | `gemma4:e4b`   | ビルド時にコンテナへ焼き込むモデル名                        |
+
+モデルをビルド時にイメージへ焼き込む（起動高速化）ため、`ollama serve` 起動後にヘルスチェックポーリング（最大60秒）で準備完了を確認してから `ollama pull` を実行します。
+
+### 再デプロイ時の注意
+
+- モデルを変更する場合は `Dockerfile` の `ENV MODEL` を更新してから `./deploy.sh --build-only` でイメージを再ビルドし、`./deploy.sh --deploy-only` でデプロイしてください。
+- `IMAGE_TAG` はデフォルト `latest` のため、同じタグで上書きされます。バージョン管理したい場合は `deploy.sh` の `IMAGE_TAG` を変更してください。
+- Cloud Run のリージョンは NVIDIA L4 GPU が利用できる `asia-southeast1` を使用しています（Functions の `asia-northeast1` とはクロスリージョン通信になります）。

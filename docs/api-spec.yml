@@ -1213,6 +1213,7 @@ components:
           type: array
           items:
             type: string
+            enum: [PERMANENT, LIMITED, REWARD]
           description: 限定タイプ絞り込み
         favoriteModes:
           type: array

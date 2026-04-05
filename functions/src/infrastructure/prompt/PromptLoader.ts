@@ -15,10 +15,16 @@ const LOCAL_PROMPT_PATH = path.resolve(
  * 本番環境では GitHub Contents API 経由で取得する。
  * キャッシュ機構あり（インスタンス単位）。
  */
+/** GitHub API 取得失敗時のセンチネル値（キャッシュを汚さず再試行を1回に限定） */
+const FETCH_FAILED = Symbol('FETCH_FAILED');
+
 export class PromptLoader {
-  private cache: string | undefined;
+  private cache: string | typeof FETCH_FAILED | undefined;
 
   async load(): Promise<string | undefined> {
+    if (this.cache === FETCH_FAILED) {
+      return undefined;
+    }
     if (this.cache !== undefined) {
       return this.cache;
     }
@@ -52,6 +58,7 @@ export class PromptLoader {
       console.warn(
         '[PromptLoader] GITHUB_PAT が設定されていません。デフォルトプロンプトを使用します。'
       );
+      this.cache = FETCH_FAILED;
       return Promise.resolve(undefined);
     }
 
@@ -80,6 +87,7 @@ export class PromptLoader {
                   '[PromptLoader] GitHub API レスポンスに content フィールドがありません。レスポンス:',
                   body.slice(0, 200)
                 );
+                this.cache = FETCH_FAILED;
                 resolve(undefined);
                 return;
               }
@@ -95,6 +103,7 @@ export class PromptLoader {
                 '[PromptLoader] GitHub API レスポンスの解析に失敗しました:',
                 err
               );
+              this.cache = FETCH_FAILED;
               resolve(undefined);
             }
           });
@@ -105,6 +114,7 @@ export class PromptLoader {
           '[PromptLoader] GitHub API へのリクエストが失敗しました:',
           err
         );
+        this.cache = FETCH_FAILED;
         resolve(undefined);
       });
     });

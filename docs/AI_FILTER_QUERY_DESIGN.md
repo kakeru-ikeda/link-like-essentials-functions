@@ -129,7 +129,7 @@ gcloud run deploy lles-llm-engine \
 ### 4.1 エンドポイント仕様
 
 ```
-POST /cards/filter-query
+POST /ai/cards/filter-query
 Authorization: Bearer <Firebase ID Token>
 Content-Type: application/json
 ```
@@ -397,7 +397,7 @@ OLLAMA_MODEL=gemma4:e4b
 "花帆でリシャッフルできるSRカードは？"
     │
     ▼
-[Firebase Function: POST /cards/filter-query]
+[Firebase Function: POST /ai/cards/filter-query]
     │ Firebase ID Token で認証
     │
     ▼
@@ -464,7 +464,7 @@ OLLAMA_MODEL=gemma4:e4b
    - システムプロンプトの精度改善
 
 4. **OpenAPI 仕様書更新**
-   - `docs/api-spec.yml` に `/cards/filter-query` エンドポイントを追記
+   - `docs/api-spec.yml` に `/ai/cards/filter-query` エンドポイントを追記
 
 ---
 
