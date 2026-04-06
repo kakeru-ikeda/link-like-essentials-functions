@@ -72,11 +72,15 @@ export class OllamaClient {
 
     let response: Response;
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 270_000); // 270s
       response = await fetch(url, {
         method: 'POST',
         headers,
         body,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
     } catch (cause) {
       throw new InternalServerError('LLM エンジンへの接続に失敗しました');
     }
