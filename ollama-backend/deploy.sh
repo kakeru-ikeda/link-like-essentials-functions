@@ -11,7 +11,7 @@ set -euo pipefail
 
 # --- 設定 ---
 PROJECT_ID="link-like-essentials"
-REGION="asia-southeast1"       # Cloud Run デプロイリージョン（NVIDIA L4 対応）
+REGION="asia-northeast1"        # Cloud Run デプロイリージョン
 ARTIFACT_REGION="asia-northeast1"  # Artifact Registry リージョン（既存）
 SERVICE_NAME="lles-llm-engine"
 REPO_NAME="lles-llm"
@@ -20,9 +20,9 @@ IMAGE_TAG="latest"
 
 IMAGE_URI="${ARTIFACT_REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-CLOUD_RUN_CPU=8
-CLOUD_RUN_MEMORY="32Gi"
-CLOUD_RUN_CONCURRENCY=4
+CLOUD_RUN_CPU=4
+CLOUD_RUN_MEMORY="8Gi"
+CLOUD_RUN_CONCURRENCY=1
 CLOUD_RUN_TIMEOUT=120
 CLOUD_RUN_MIN_INSTANCES=0
 CLOUD_RUN_MAX_INSTANCES=2
@@ -73,7 +73,7 @@ if [ "${BUILD}" = "true" ]; then
   gcloud builds submit "${SCRIPT_DIR}" \
     --project="${PROJECT_ID}" \
     --tag="${IMAGE_URI}" \
-    --machine-type=e2-highcpu-32
+    --machine-type=e2-medium
   echo "[build] Done: ${IMAGE_URI}"
 fi
 
@@ -85,8 +85,6 @@ if [ "${DEPLOY}" = "true" ]; then
     --project="${PROJECT_ID}" \
     --image="${IMAGE_URI}" \
     --region="${REGION}" \
-    --gpu=1 \
-    --gpu-type=nvidia-l4 \
     --cpu="${CLOUD_RUN_CPU}" \
     --memory="${CLOUD_RUN_MEMORY}" \
     --concurrency="${CLOUD_RUN_CONCURRENCY}" \

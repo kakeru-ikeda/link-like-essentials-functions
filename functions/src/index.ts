@@ -67,7 +67,7 @@ export const deckApi = functions
   .https.onRequest(Sentry.wrapHttpFunction(deckApp));
 export const aiApi = functions
   .region('asia-northeast1')
-  .runWith({ secrets: ['GITHUB_PAT'] })
+  .runWith({ secrets: ['GITHUB_PAT'], timeoutSeconds: 300, memory: '512MB' })
   .https.onRequest(Sentry.wrapHttpFunction(aiApp));
 
 // 人気ハッシュタグ集計ジョブ（毎日0時・12時 JST）
