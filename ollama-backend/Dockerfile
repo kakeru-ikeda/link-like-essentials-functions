@@ -12,8 +12,8 @@ ENV OLLAMA_DEBUG false
 # GPU メモリからモデルをアンロードしない
 ENV OLLAMA_KEEP_ALIVE -1
 
-# 並列リクエスト数（Cloud Run の --concurrency と合わせる）
-ENV OLLAMA_NUM_PARALLEL 4
+# 並列リクエスト数（CPU推論は1に絞る）
+ENV OLLAMA_NUM_PARALLEL 1
 
 COPY Modelfile /tmp/Modelfile
 
