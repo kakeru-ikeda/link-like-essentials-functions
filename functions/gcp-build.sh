@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Cloud Functions build environment sets GOOGLE_FUNCTION_TARGET for the function being deployed.
-# When deploying 'deckApi', we need Puppeteer/Chrome installed.
-if [ "$GOOGLE_FUNCTION_TARGET" = "deckApi" ]; then
-  echo "Installing Puppeteer for deckApi..."
-  node node_modules/puppeteer/install.mjs
-else
-  echo "Skipping Puppeteer installation for $GOOGLE_FUNCTION_TARGET"
-fi
+# Cloud Functions build environment: install Puppeteer/Chrome for all deployments.
+# Puppeteer is required by deckApi for thumbnail generation.
+echo "Installing Puppeteer Chrome (GOOGLE_FUNCTION_TARGET=${GOOGLE_FUNCTION_TARGET})..."
+node node_modules/puppeteer/install.mjs
