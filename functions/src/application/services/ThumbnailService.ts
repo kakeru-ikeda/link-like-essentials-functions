@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import type { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer';
 
+import type { Rarity } from '@/domain/valueObjects/Rarity';
 import { StorageUtility } from '@/infrastructure/storage/StorageUtility';
 
 export interface ThumbnailDeckSlot {
@@ -31,7 +32,7 @@ export interface ThumbnailCard {
   id: string;
   cardName: string;
   characterName: string;
-  rarity: 'UR' | 'SR' | 'R' | 'DR' | 'BR' | 'LR';
+  rarity: Rarity;
   detail?: ThumbnailCardDetail;
 }
 
