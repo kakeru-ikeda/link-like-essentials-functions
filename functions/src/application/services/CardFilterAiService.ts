@@ -1,5 +1,6 @@
 import { InternalServerError, ValidationError } from '@/domain/errors/AppError';
 import type { CardFilter } from '@/domain/entities/CardFilter';
+import { RARITIES } from '@/domain/valueObjects/Rarity';
 import type { OllamaClient } from '@/infrastructure/ai/OllamaClient';
 import type { PromptLoader } from '@/infrastructure/prompt/PromptLoader';
 
@@ -14,7 +15,7 @@ Your task is to parse a Japanese natural language query and return ONLY a valid 
 ## CardFilter Interface (all fields optional)
 {
   "keyword": "string - partial match for card/character/skill/trait name and effect",
-  "rarities": ["UR" | "SR" | "R" | "DR" | "BR" | "LR"],
+  "rarities": ["mUR" | "UR" | "mSR" | "SR" | "R" | "DR" | "BR" | "LR"],
   "characterNames": ["string - Japanese character names only"],
   "styleTypes": ["CHEERLEADER" | "TRICKSTER" | "PERFORMER" | "MOODMAKER"],
   "limitedTypes": ["PERMANENT" | "LIMITED" | "SPRING_LIMITED" | "SUMMER_LIMITED" | "AUTUMN_LIMITED" | "WINTER_LIMITED" | "BIRTHDAY_LIMITED" | "LEG_LIMITED" | "SHUFFLE_LIMITED" | "BATTLE_LIMITED" | "BANGDREAM_LIMITED" | "PARTY_LIMITED" | "ACTIVITY_LIMITED" | "GRADUATE_LIMITED" | "LOGIN_BONUS" | "REWARD"],
@@ -111,7 +112,7 @@ UN_DRAW（アンドロー）: ドローされない特性。
 2. For exclusion requests (e.g. 「〜を除く」「〜以外」「〜ではない」「〜でない」), use ONLY the "exclude*" fields. NEVER simultaneously set the same value in both the positive field and its exclude counterpart.
 3. skillEffects and traitEffects MUST only contain effectType values listed in the tables above. NEVER use "*", wildcards, or invented values.
 4. If the query mentions a character name (including nicknames like「花帆」→「日野下花帆」,「さやか」→「村野さやか」,「梢」→「乙宗梢」,「綴理」→「夕霧綴理」,「瑠璃乃」→「大沢瑠璃乃」,「慈」→「藤島慈」,「小鈴」→「徒町小鈴」,「吟子」→「百生吟子」,「姫芽」→「安養寺姫芽」,「泉」→「桂城泉」), use the full Japanese name
-5. Rarity mentions: UR, SR, R, DR, BR, LR — use uppercase as-is
+5. Rarity mentions: mUR, UR, mSR, SR, R, DR, BR, LR — use uppercase as-is
 6. ALWAYS output ONLY a raw JSON object. NO markdown, NO explanation, NO code block.
 
 ## Examples
@@ -208,7 +209,7 @@ export class CardFilterAiService {
    * LLM が返した JSON から不正な値を除去し安全な CardFilter を生成する
    */
   private sanitize(raw: Record<string, unknown>): CardFilter {
-    const validRarities = new Set(['UR', 'SR', 'R', 'DR', 'BR', 'LR']);
+    const validRarities = new Set<string>(RARITIES);
     const validStyleTypes = new Set([
       'CHEERLEADER',
       'TRICKSTER',

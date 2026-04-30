@@ -1,3 +1,4 @@
+import { RARITIES } from '@/domain/valueObjects/Rarity';
 import { z } from 'zod';
 
 const createTmpStorageUrlSchema = (label: string): z.ZodType<string> =>
@@ -112,7 +113,7 @@ const ThumbnailCardSchema = z.object({
   id: z.string().min(1),
   cardName: z.string().min(1),
   characterName: z.string().min(1),
-  rarity: z.enum(['UR', 'SR', 'R', 'DR', 'BR', 'LR']),
+  rarity: z.enum(RARITIES),
   detail: z
     .object({
       awakeBeforeStorageUrl: z.string().url().optional(),
@@ -192,7 +193,7 @@ export const CardFilterQuerySchema = z.object({
 const CardFilterSchema = z
   .object({
     keyword: z.string().optional(),
-    rarities: z.array(z.enum(['UR', 'SR', 'R', 'DR', 'BR', 'LR'])).optional(),
+    rarities: z.array(z.enum(RARITIES)).optional(),
     characterNames: z.array(z.string()).optional(),
     styleTypes: z
       .array(z.enum(['CHEERLEADER', 'TRICKSTER', 'PERFORMER', 'MOODMAKER']))
