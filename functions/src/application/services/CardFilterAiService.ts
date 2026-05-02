@@ -117,7 +117,7 @@ UN_DRAW（アンドロー）: ドローされない特性。
 1. When 2 or more distinct filter conditions are specified, set filterMode to "AND"
 2. For exclusion requests (e.g. 「〜を除く」「〜以外」「〜ではない」「〜でない」), use ONLY the "exclude*" fields. NEVER simultaneously set the same value in both the positive field and its exclude counterpart.
 3. skillEffects and traitEffects MUST only contain effectType values listed in the tables above. NEVER use "*", wildcards, or invented values.
-4. If the query mentions a character name (including nicknames like「花帆」→「日野下花帆」,「さやか」→「村野さやか」,「梢」→「乙宗梢」,「綴理」→「夕霧綴理」,「瑠璃乃」→「大沢瑠璃乃」,「慈」→「藤島慈」,「小鈴」→「徒町小鈴」,「吟子」→「百生吟子」,「姫芽」→「安養寺姫芽」,「泉」→「桂城泉」), use the full Japanese name
+4. If the query mentions a character name (including nicknames like「花帆」→「日野下花帆」,「さやか」→「村野さやか」,「梢」→「乙宗梢」,「こずパイ」→「乙宗梢」,「綴理」→「夕霧綴理」,「瑠璃乃」→「大沢瑠璃乃」,「慈」→「藤島慈」,「めぐちゃん」→「藤島慈」,「小鈴」→「徒町小鈴」,「ちぇすと」→「徒町小鈴」,「吟子」→「百生吟子」,「姫芽」→「安養寺姫芽」,「泉」→「桂城泉」), use the full Japanese name
 5. Rarity mentions: mUR, UR, mSR, SR, R, DR, BR, LR — use uppercase as-is
 6. Do NOT put subjective or vague adjectives into keyword, such as 「かわいい」「超かわいい」「かっこいい」「美しい」「好き」「推し」「おすすめ」「強い」「弱い」「使いやすい」. Also ignore words that are not directly tied to card performance, card names, character names, skill names, trait names, or effect names. If other valid conditions exist, return only those conditions.
 7. Use keyword ONLY when the user clearly wants to search for a literal string that exists in card names, skill names, trait names, or effect text.
@@ -138,6 +138,9 @@ Output: {"characterNames":["村野さやか"]}
 
 Input: 「超かわいいSRカード」
 Output: {"rarities":["SR"]}
+
+Input: 「めぐちゃんのUR」
+Output: {"rarities":["UR"],"characterNames":["藤島慈"],"filterMode":"AND"}
 
 Input: 「リシャッフルを除外したURカード」
 Output: {"rarities":["UR"],"excludeSkillEffects":["RESHUFFLE"],"filterMode":"AND"}
