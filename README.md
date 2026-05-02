@@ -374,46 +374,34 @@ Base URL: `https://asia-northeast1-{project-id}.cloudfunctions.net/aiApi`
 
 ---
 
-## ollama-backend (LLM エンジン)
+## AI LLM Provider (Amazon Bedrock)
 
-`ollama-backend/` 配下に Cloud Run + NVIDIA L4 GPU で動作する Ollama コンテナの設定があります。
+AI API は Amazon Bedrock Runtime を使用して LLM 推論を行います。外部 API のリクエスト/レスポンス形式は変わらず、Functions 内部の `LlmClient` 実装で Bedrock を呼び出します。
 
 ### 前提
 
-- Google Cloud SDK (`gcloud`) がインストール済みで対象プロジェクトにログイン済み
-- Artifact Registry リポジトリ `asia-northeast1-docker.pkg.dev/link-like-essentials/lles-llm` が作成済み
-- Cloud Run が `asia-southeast1` (NVIDIA L4 対応リージョン) で有効
+- AWS アカウントで利用モデルの Bedrock model access が有効化済み
+- Functions 実行環境から Bedrock Runtime を呼び出す AWS 認証情報が設定済み
+- IAM には利用モデルに対する `bedrock:InvokeModel` 権限を付与
 
-### ビルド & デプロイ
+### Functions 環境変数
 
-```bash
-cd ollama-backend
+未設定の場合は Functions 側のデフォルト値が使われます。モデルやリージョンを変更する場合は Firebase Functions の環境変数またはローカル `.env` で上書きしてください。
 
-# ビルド + デプロイ（通常）
-./deploy.sh
+| 変数名 | デフォルト値 | 説明 |
+| ------ | ------------ | ---- |
+| `AI_PROVIDER` | `bedrock` | LLM プロバイダ。移行期間中のみ `ollama` へ切り替え可能 |
+| `BEDROCK_REGION` | `ap-northeast-1` | Bedrock Runtime のリージョン |
+| `BEDROCK_MODEL_ID` | `anthropic.claude-3-5-haiku-20241022-v1:0` | 利用する Bedrock モデル ID |
+| `BEDROCK_MAX_TOKENS` | `1024` | 最大出力トークン数 |
+| `BEDROCK_TEMPERATURE` | `0` | JSON 生成安定化のため低温度を推奨 |
+| `BEDROCK_TOP_P` | `0.9` | サンプリング設定 |
+| `BEDROCK_TIMEOUT_MS` | `60000` | Bedrock 呼び出しタイムアウト |
 
-# イメージビルドのみ（デプロイしない）
-./deploy.sh --build-only
+### 認証
 
-# デプロイのみ（ビルド済みイメージを使用）
-./deploy.sh --deploy-only
-```
+本番では GCP サービスアカウントから AWS IAM Role を引き受ける Workload Identity Federation を推奨します。短期検証では `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` を GitHub Secrets または Functions の環境変数に設定して動作確認できます。
 
-### Dockerfile の主要引数 / 環境変数
+### Rollback
 
-| 変数名                | デフォルト値   | 説明                                                        |
-| --------------------- | -------------- | ----------------------------------------------------------- |
-| `OLLAMA_HOST`         | `0.0.0.0:8080` | Cloud Run はポート 8080 で待ち受ける                        |
-| `OLLAMA_MODELS`       | `/models`      | モデルの重みの保存先                                        |
-| `OLLAMA_DEBUG`        | `false`        | ログの詳細度                                                |
-| `OLLAMA_KEEP_ALIVE`   | `-1`           | GPU メモリからモデルをアンロードしない (`-1` = 無制限)      |
-| `OLLAMA_NUM_PARALLEL` | `4`            | 並列リクエスト数（Cloud Run の `--concurrency` と合わせる） |
-| `MODEL`               | `gemma4:e4b`   | ビルド時にコンテナへ焼き込むモデル名                        |
-
-モデルをビルド時にイメージへ焼き込む（起動高速化）ため、`ollama serve` 起動後にヘルスチェックポーリング（最大60秒）で準備完了を確認してから `ollama pull` を実行します。
-
-### 再デプロイ時の注意
-
-- モデルを変更する場合は `Dockerfile` の `ENV MODEL` を更新してから `./deploy.sh --build-only` でイメージを再ビルドし、`./deploy.sh --deploy-only` でデプロイしてください。
-- `IMAGE_TAG` はデフォルト `latest` のため、同じタグで上書きされます。バージョン管理したい場合は `deploy.sh` の `IMAGE_TAG` を変更してください。
-- Cloud Run のリージョンは NVIDIA L4 GPU が利用できる `asia-southeast1` を使用しています（Functions の `asia-northeast1` とはクロスリージョン通信になります）。
+移行期間中は `AI_PROVIDER=ollama` と `OLLAMA_BASE_URL` / `OLLAMA_MODEL` を設定することで、既存の Ollama 経路へ戻せます。Bedrock での本番運用が安定した後、Ollama 関連の Cloud Run・Artifact Registry・Secrets・`ollama-backend/` を削除してください。
