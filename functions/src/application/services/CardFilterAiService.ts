@@ -1,10 +1,16 @@
 import { InternalServerError, ValidationError } from '@/domain/errors/AppError';
 import type { CardFilter } from '@/domain/entities/CardFilter';
 import { RARITIES } from '@/domain/valueObjects/Rarity';
-import type { OllamaClient } from '@/infrastructure/ai/OllamaClient';
+import type { LlmClient } from '@/infrastructure/ai/LlmClient';
 import type { PromptLoader } from '@/infrastructure/prompt/PromptLoader';
 
 export type { CardFilter };
+
+interface CardFilterAiGenerationOptions {
+  temperature: number;
+  topP: number;
+  maxTokens: number;
+}
 
 /**
  * カードフィルタ生成用システムプロンプト（デフォルト）
@@ -113,7 +119,9 @@ UN_DRAW（アンドロー）: ドローされない特性。
 3. skillEffects and traitEffects MUST only contain effectType values listed in the tables above. NEVER use "*", wildcards, or invented values.
 4. If the query mentions a character name (including nicknames like「花帆」→「日野下花帆」,「さやか」→「村野さやか」,「梢」→「乙宗梢」,「綴理」→「夕霧綴理」,「瑠璃乃」→「大沢瑠璃乃」,「慈」→「藤島慈」,「小鈴」→「徒町小鈴」,「吟子」→「百生吟子」,「姫芽」→「安養寺姫芽」,「泉」→「桂城泉」), use the full Japanese name
 5. Rarity mentions: mUR, UR, mSR, SR, R, DR, BR, LR — use uppercase as-is
-6. ALWAYS output ONLY a raw JSON object. NO markdown, NO explanation, NO code block.
+6. Do NOT put subjective or vague adjectives into keyword, such as 「かわいい」「超かわいい」「かっこいい」「美しい」「好き」「推し」「おすすめ」「強い」「弱い」「使いやすい」. Also ignore words that are not directly tied to card performance, card names, character names, skill names, trait names, or effect names. If other valid conditions exist, return only those conditions.
+7. Use keyword ONLY when the user clearly wants to search for a literal string that exists in card names, skill names, trait names, or effect text.
+8. ALWAYS output ONLY a raw JSON object. NO markdown, NO explanation, NO code block.
 
 ## Examples
 Input: 「花帆でリシャッフルできるSRカードは？」
@@ -124,6 +132,12 @@ Output: {"rarities":["UR"],"styleTypes":["CHEERLEADER"],"filterMode":"AND"}
 
 Input: 「さやかのカード一覧」
 Output: {"characterNames":["村野さやか"]}
+
+Input: 「さやかの超かわいいカード」
+Output: {"characterNames":["村野さやか"]}
+
+Input: 「超かわいいSRカード」
+Output: {"rarities":["SR"]}
 
 Input: 「リシャッフルを除外したURカード」
 Output: {"rarities":["UR"],"excludeSkillEffects":["RESHUFFLE"],"filterMode":"AND"}
@@ -152,14 +166,19 @@ Output: {"rarities":["SR"],"limitedTypes":["BIRTHDAY_LIMITED","SHUFFLE_LIMITED"]
 /**
  * CardFilterAiService
  * 自然言語クエリを解析して CardFilter JSON を生成する。
- * OllamaClient を通じて LLM に問い合わせ、レスポンスをバリデーションして返却する。
+ * LlmClient を通じて LLM に問い合わせ、レスポンスをバリデーションして返却する。
  */
 export class CardFilterAiService {
   constructor(
-    private readonly ollamaClient: OllamaClient,
+    private readonly llmClient: LlmClient,
     private readonly model: string,
     private readonly promptLoader: PromptLoader,
-    private readonly promptVersion: string = 'v1'
+    private readonly promptVersion: string = 'v1',
+    private readonly generationOptions: CardFilterAiGenerationOptions = {
+      temperature: 0,
+      topP: 0.9,
+      maxTokens: 1024,
+    }
   ) {}
 
   getModelName(): string {
@@ -173,22 +192,26 @@ export class CardFilterAiService {
   async generateCardFilter(query: string): Promise<CardFilter> {
     const systemPrompt =
       (await this.promptLoader.load()) || DEFAULT_SYSTEM_PROMPT;
-    const rawContent = await this.ollamaClient.chat({
+    const rawContent = await this.llmClient.chat({
       model: this.model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: query },
       ],
-      stream: false,
-      format: 'json',
+      responseFormat: 'json',
+      options: this.generationOptions,
     });
 
     let parsed: unknown;
     try {
       // LLM がスカラー値の直後に余分な ] を生成することがあるため前処理で除去する
-      const cleaned = rawContent.replace(/\b(false|true|null)\s*\]/g, '$1');
+      const cleaned = this.cleanJsonResponse(rawContent).replace(
+        /\b(false|true|null)\s*\]/g,
+        '$1'
+      );
       parsed = JSON.parse(cleaned);
     } catch {
+      this.logJsonParseFailure(rawContent);
       throw new InternalServerError(
         'LLM のレスポンスが JSON として解析できませんでした'
       );
@@ -203,6 +226,33 @@ export class CardFilterAiService {
     }
 
     return this.sanitize(parsed as Record<string, unknown>);
+  }
+
+  private cleanJsonResponse(rawContent: string): string {
+    const withoutFence = rawContent
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    const start = withoutFence.indexOf('{');
+    const end = withoutFence.lastIndexOf('}');
+
+    if (start === -1 || end === -1 || start > end) {
+      return withoutFence;
+    }
+
+    return withoutFence.slice(start, end + 1);
+  }
+
+  private logJsonParseFailure(rawContent: string): void {
+    const maxLogLength = 4000;
+
+    console.error('[CardFilterAiService] LLM response JSON parse failed', {
+      responseLength: rawContent.length,
+      truncated: rawContent.length > maxLogLength,
+      rawContent: rawContent.slice(0, maxLogLength),
+    });
   }
 
   /**

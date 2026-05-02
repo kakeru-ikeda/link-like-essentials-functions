@@ -1,6 +1,7 @@
 import { GoogleAuth } from 'google-auth-library';
 
 import { InternalServerError } from '@/domain/errors/AppError';
+import type { LlmChatRequest, LlmClient } from '@/infrastructure/ai/LlmClient';
 
 export interface OllamaMessage {
   role: 'system' | 'user' | 'assistant';
@@ -34,12 +35,22 @@ interface OllamaChatResponse {
  * 認証: Cloud Run へのサービス間通信には OIDC トークンを使用する。
  * ローカル開発時（OLLAMA_BASE_URL が localhost の場合）は認証をスキップする。
  */
-export class OllamaClient {
+export class OllamaClient implements LlmClient {
   constructor(private readonly baseUrl: string) {}
 
-  async chat(request: OllamaChatRequest): Promise<string> {
+  async chat(request: LlmChatRequest): Promise<string> {
     const url = `${this.baseUrl}/api/chat`;
-    const body = JSON.stringify({ ...request, stream: false });
+    const body = JSON.stringify({
+      model: request.model,
+      messages: request.messages,
+      stream: false,
+      options: {
+        temperature: request.options?.temperature,
+        top_p: request.options?.topP,
+        top_k: request.options?.topK,
+      },
+      format: request.responseFormat === 'json' ? 'json' : undefined,
+    });
 
     let headers: Record<string, string> = {
       'Content-Type': 'application/json',

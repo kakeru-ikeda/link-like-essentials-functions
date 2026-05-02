@@ -20,7 +20,7 @@ paths:
       summary: 自然言語からカードフィルタクエリを生成
       description: >-
         自然言語のテキストを解析し、CardFilter インターフェースに準拠したフィルタパラメータを返却する。
-        内部で Cloud Run 上の Ollama (gemma4:e4b) を経由して LLM 推論を行う。
+        内部で Amazon Bedrock を経由して LLM 推論を行う。
       security:
         - bearerAuth: []
       requestBody:

@@ -8,6 +8,7 @@
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "emulators": "npm run puppeteer:install && npm run build && firebase emulators:start",
+    "emulators:functions": "npm run puppeteer:install && npm run build && firebase emulators:start --only functions",
     "emulators:firestore": "firebase emulators:start --only firestore",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
@@ -31,6 +32,7 @@
     "node": "20"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1041.0",
     "@sentry/google-cloud-serverless": "^10.32.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
